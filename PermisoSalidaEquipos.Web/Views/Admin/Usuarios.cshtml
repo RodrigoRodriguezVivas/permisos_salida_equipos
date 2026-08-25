@@ -25,7 +25,7 @@
                 <td>@u.NombreUsuarioDominio</td>
                 <td>@u.NombreCompleto</td>
                 <td>@u.Cargo</td>
-                <td><span class="badge text-bg-secondary">@u.RolNombre</span></td>
+                <td><span class="badge text-bg-secondary">@RoleNames.NombreAmigable(u.RolNombre)</span></td>
                 <td>@u.JefeInmediatoNombre</td>
                 <td>@(u.Activo ? "Sí" : "No")</td>
                 <td><a asp-controller="Admin" asp-action="Editar" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary">Editar</a></td>

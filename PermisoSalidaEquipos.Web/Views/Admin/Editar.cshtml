@@ -19,7 +19,7 @@
                 <select asp-for="RolId" class="form-select">
                     @foreach (var rol in Model.RolesDisponibles)
                     {
-                        <option value="@rol.Id">@rol.NombreCompleto</option>
+                        <option value="@rol.Id">@RoleNames.NombreAmigable(rol.NombreCompleto)</option>
                     }
                 </select>
                 <span asp-validation-for="RolId" class="text-danger"></span>

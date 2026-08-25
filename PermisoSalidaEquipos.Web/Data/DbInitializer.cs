@@ -72,11 +72,11 @@ namespace PermisoSalidaEquipos.Web.Data
             var rolJefe = await db.Roles.SingleAsync(r => r.Nombre == RoleNames.JefeInmediato);
             var rolDirector = await db.Roles.SingleAsync(r => r.Nombre == RoleNames.DirectorTI);
 
-            var directora = await ObtenerOCrearUsuarioDemoAsync(db, "demo.director", "Ana Torres", "director.demo@alianzagrafica.com",
+            var director = await ObtenerOCrearUsuarioDemoAsync(db, "demo.director", "Rodrigo Rodriguez Vivas", "rodrigo.demo@alianzagrafica.com",
                 "1000111222", "Director de TI", rolDirector.Id, jefeInmediatoId: null);
 
-            var jefe = await ObtenerOCrearUsuarioDemoAsync(db, "demo.jefe", "Carlos Mendoza", "jefe.demo@alianzagrafica.com",
-                "1000333444", "Jefe de Producción", rolJefe.Id, jefeInmediatoId: directora.Id);
+            var jefe = await ObtenerOCrearUsuarioDemoAsync(db, "demo.jefe", "Juan Gabriel Silva", "juan.demo@alianzagrafica.com",
+                "1000333444", "Jefe de Producción", rolJefe.Id, jefeInmediatoId: director.Id);
 
             var usuario1 = await ObtenerOCrearUsuarioDemoAsync(db, "demo.usuario", "Laura Gómez", "laura.demo@alianzagrafica.com",
                 "1000555666", "Diseñadora Gráfica", rolUsuario.Id, jefeInmediatoId: jefe.Id);
@@ -107,11 +107,11 @@ namespace PermisoSalidaEquipos.Web.Data
                 "Evento externo", "Presentación con un cliente fuera de la planta", ahora.AddDays(-4), ahora.AddDays(-3));
             solicitud3.FechaDecisionJefe = ahora.AddDays(-5).AddHours(4);
             solicitud3.ComentarioJefe = "Aprobado.";
-            solicitud3.DirectorTIRevisorId = directora.Id;
+            solicitud3.DirectorTIRevisorId = director.Id;
             solicitud3.FechaDecisionDirectorTI = ahora.AddDays(-5).AddHours(6);
             solicitud3.ComentarioDirectorTI = "Aprobado, buen viaje.";
             await AgregarHistorialAsync(db, solicitud3, EstadoSolicitud.PendienteDirectorTI, jefe.Id, ahora.AddDays(-5).AddHours(4), "Aprobado.");
-            await AgregarHistorialAsync(db, solicitud3, EstadoSolicitud.Aprobada, directora.Id, ahora.AddDays(-5).AddHours(6), "Aprobado, buen viaje.");
+            await AgregarHistorialAsync(db, solicitud3, EstadoSolicitud.Aprobada, director.Id, ahora.AddDays(-5).AddHours(6), "Aprobado, buen viaje.");
 
             // 4) Rechazada por el jefe inmediato (para ver ese caso también).
             var solicitud4 = await CrearSolicitudDemoAsync(db, usuario2, jefe.Id, EstadoSolicitud.RechazadaJefe, ahora.AddDays(-3),
