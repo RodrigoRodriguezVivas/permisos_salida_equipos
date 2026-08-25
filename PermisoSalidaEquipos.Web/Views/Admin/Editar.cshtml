@@ -1,0 +1,49 @@
+@model EditarUsuarioAdminViewModel
+@{
+    ViewData["Title"] = $"Editar usuario: {Model.NombreCompleto}";
+}
+
+<h1>Editar usuario</h1>
+<p class="text-muted">@Model.NombreUsuarioDominio</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-controller="Admin" asp-action="Editar" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="NombreUsuarioDominio" />
+            <input type="hidden" asp-for="NombreCompleto" />
+
+            <div class="mb-3">
+                <label asp-for="RolId" class="form-label"></label>
+                <select asp-for="RolId" class="form-select">
+                    @foreach (var rol in Model.RolesDisponibles)
+                    {
+                        <option value="@rol.Id">@rol.NombreCompleto</option>
+                    }
+                </select>
+                <span asp-validation-for="RolId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="JefeInmediatoId" class="form-label"></label>
+                <select asp-for="JefeInmediatoId" class="form-select">
+                    <option value="">-- Sin jefe inmediato (solo aplica a Director de TI) --</option>
+                    @foreach (var jefe in Model.JefesDisponibles)
+                    {
+                        <option value="@jefe.Id">@jefe.NombreCompleto @(jefe.Cargo != null ? $"({jefe.Cargo})" : "")</option>
+                    }
+                </select>
+                <span asp-validation-for="JefeInmediatoId" class="text-danger"></span>
+            </div>
+
+            <div class="form-check mb-3">
+                <input asp-for="Activo" class="form-check-input" />
+                <label asp-for="Activo" class="form-check-label"></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-outline-secondary">Volver</a>
+        </form>
+    </div>
+</div>

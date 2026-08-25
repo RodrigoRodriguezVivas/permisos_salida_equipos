@@ -1,0 +1,46 @@
+@model List<PermisoSalidaEquipos.Web.Models.Usuario>
+@{
+    ViewData["Title"] = "Ingresar (demo)";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo - Permisos de Salida de Equipos</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body class="bg-light">
+    <div class="container" style="max-width: 720px; margin-top: 4rem;">
+        <div class="text-center mb-4">
+            <h1>Permisos de Salida de Equipos</h1>
+            <p class="text-muted">Sitio de <strong>demostración</strong> de Alianza Gráfica S.A. — no es el sistema real ni se conecta a Active Directory.</p>
+        </div>
+
+        <div class="alert alert-info">
+            En el despliegue real de Aligraf el ingreso es automático con la cuenta de dominio de Windows.
+            Aquí, para poder mostrar el flujo completo, elige con cuál usuario de ejemplo quieres entrar.
+        </div>
+
+        <div class="row g-3">
+            @foreach (var usuario in Model)
+            {
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">@usuario.NombreCompleto</h5>
+                            <p class="card-text text-muted mb-1">@usuario.Cargo</p>
+                            <span class="badge text-bg-secondary mb-3">@usuario.Rol?.Nombre</span>
+                            <form asp-controller="Cuenta" asp-action="IngresarComo" method="post">
+                                <input type="hidden" name="usuarioId" value="@usuario.Id" />
+                                <button type="submit" class="btn btn-primary w-100">Entrar como @usuario.NombreCompleto</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</body>
+</html>

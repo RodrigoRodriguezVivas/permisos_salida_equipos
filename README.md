@@ -1,0 +1,236 @@
+# Permisos de Salida de Equipos de Cómputo — Alianza Gráfica S.A.
+
+Aplicación web para gestionar el permiso de salida de equipos de cómputo, con
+flujo de aprobación en dos pasos (jefe inmediato → Director de TI), ingreso
+automático con la cuenta de dominio (Windows/Active Directory) y datos
+almacenados en SQL Server. Construida en ASP.NET Core 8 MVC para hospedarse
+en el IIS de Aligraf.
+
+## 1. Qué incluye
+
+- `PermisoSalidaEquipos.Web/` — el proyecto ASP.NET Core 8 MVC.
+- `database/01_CreateDatabase.sql` — script para crear la base de datos y las
+  tablas en SQL Server (coincide exactamente con lo que espera la aplicación).
+- `Dockerfile`, `.dockerignore`, `render.yaml` — solo para publicar el sitio de
+  **demostración** pública (ver sección 10). El despliegue real en el IIS de
+  Aligraf no los usa.
+- Este `README.md`.
+
+## 2. Cómo funciona el flujo
+
+1. **Usuario**: inicia sesión (automáticamente, con su cuenta de Windows), y
+   la primera vez completa su perfil (cédula, cargo y jefe inmediato). Desde
+   "Nueva solicitud" registra el permiso de salida del equipo.
+2. **Jefe inmediato**: recibe un correo y ve la solicitud en "Aprobaciones
+   (jefe inmediato)". Puede aprobar (pasa al Director de TI) o rechazar.
+3. **Director de TI**: recibe la solicitud aprobada por el jefe, la revisa en
+   "Aprobaciones (Director TI)" y da la aprobación final o la rechaza.
+4. El solicitante recibe un correo en cada cambio de estado. Todo el
+   historial queda visible en el detalle de cada solicitud.
+5. El Director de TI tiene además acceso a **Administración** (para asignar
+   el rol y el jefe inmediato de cada persona) y **Reportes** (historial
+   completo, filtros y exportación a Excel).
+
+Los tres roles de la aplicación (Usuario, JefeInmediato, DirectorTI) son
+independientes de los grupos de Windows: se administran desde la propia
+aplicación, en Administración > Usuarios, exclusivo del Director de TI.
+
+## 3. Requisitos en el servidor (IIS de Aligraf)
+
+1. **Windows Server con IIS**, con estos roles/características de IIS
+   habilitados:
+   - `Web Server (IIS) > Security > Windows Authentication`
+   - Asegúrate de que `Anonymous Authentication` quede **deshabilitada** y
+     `Windows Authentication` **habilitada** en el sitio/aplicación del
+     Administrador de IIS (Authentication).
+2. **.NET 8 Hosting Bundle** instalado en el servidor (no solo el runtime):
+   <https://dotnet.microsoft.com/download/dotnet/8.0> → "Hosting Bundle".
+   Después de instalarlo, ejecuta `net stop was /y` seguido de `net start w3svc`
+   (o reinicia el servidor) para que IIS reconozca el módulo de ASP.NET Core.
+3. Acceso desde el servidor IIS al **SQL Server** donde vivirá la base de
+   datos `PermisoSalidaEquiposDb`.
+4. La cuenta bajo la que corre el Application Pool de IIS necesita permisos
+   para autenticar contra Active Directory (normalmente basta con la cuenta
+   de aplicación estándar del servidor; en caso de usar Kerberos en vez de
+   NTLM, puede requerirse registrar un SPN — consúltalo con el equipo de
+   infraestructura si el login no funciona).
+
+## 4. Base de datos
+
+1. En el SQL Server de Aligraf, ejecuta `database/01_CreateDatabase.sql`
+   (por ejemplo desde SQL Server Management Studio). Esto crea la base de
+   datos `PermisoSalidaEquiposDb`, las tablas y siembra los tres roles.
+2. (Opcional pero recomendado) Para poder entrar la primera vez y asignar
+   los demás roles, deja algún usuario como Director de TI desde el
+   principio. Hay dos formas — usa solo una:
+   - Descomenta y ajusta el bloque `INSERT INTO dbo.Usuarios` al final del
+     script SQL con la cuenta de dominio real, **o**
+   - Configura `AdministradorInicial:NombreUsuarioDominio` en
+     `appsettings.json` (ver sección 5) con el formato `DOMINIO\usuario`
+     antes del primer arranque; la aplicación lo creará automáticamente. Deja
+     ese valor vacío después del primer despliegue.
+
+## 5. Configuración (`appsettings.json`)
+
+Antes de publicar, edita `PermisoSalidaEquipos.Web/appsettings.json` (o, mejor
+aún, usa las variables de entorno / el `web.config` de IIS para no versionar
+contraseñas):
+
+```json
+{
+  "ConnectionStrings": {
+    "PermisoSalidaEquiposDb": "Server=SERVIDOR_SQL\\INSTANCIA;Database=PermisoSalidaEquiposDb;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "Smtp": {
+    "Habilitado": true,
+    "Host": "smtp.alianzagrafica.com",
+    "Puerto": 25,
+    "UsarSsl": false,
+    "Usuario": "",
+    "Clave": "",
+    "CorreoRemitente": "no-responder@alianzagrafica.com",
+    "UrlBaseAplicacion": "http://permisos.alianzagrafica.local"
+  }
+}
+```
+
+Pide al equipo de infraestructura los datos reales del servidor SMTP interno
+y de la cadena de conexión de SQL Server. Si `Smtp:Habilitado` queda en
+`false`, la aplicación funciona igual pero no envía correos.
+
+`Database:CrearEsquemaAutomaticamente` debe quedar en `false` en producción
+(el esquema ya lo crea `01_CreateDatabase.sql`); solo se deja en `true` en
+`appsettings.Development.json` para poder probar sin acceso al DBA.
+
+## 6. Compilar y publicar
+
+Esto requiere una máquina con el **SDK de .NET 8** y acceso a NuGet (para
+restaurar `Microsoft.EntityFrameworkCore.SqlServer`,
+`Microsoft.AspNetCore.Authentication.Negotiate`, `MailKit` y `ClosedXML` la
+primera vez) — puede ser tu equipo de desarrollo o un servidor de build; no
+hace falta que sea el servidor IIS final.
+
+```bash
+cd PermisoSalidaEquipos.Web
+dotnet restore
+dotnet publish -c Release -o ./publish
+```
+
+Copia el contenido de la carpeta `publish` al directorio del sitio en IIS
+(por ejemplo `C:\inetpub\wwwroot\PermisosSalidaEquipos`), y crea en IIS:
+
+- Un **Application Pool** con "No Managed Code" (.NET CLR Version = No
+  Managed Code), modo de proceso según lo que uses (In-Process es lo
+  recomendado y lo que trae este proyecto por defecto).
+- Un **sitio o aplicación** apuntando a esa carpeta, con **Windows
+  Authentication** habilitada y **Anonymous Authentication** deshabilitada
+  (paso 3 arriba).
+
+## 7. Primer ingreso
+
+1. Entra a la URL del sitio con un usuario de dominio. La aplicación crea tu
+   registro automáticamente y te pide completar cédula, cargo y jefe
+   inmediato.
+2. Si configuraste el `AdministradorInicial` (o el INSERT manual), esa cuenta
+   ya tiene rol Director de TI y puede entrar a Administración > Usuarios
+   para asignar el rol correcto (Usuario / JefeInmediato / DirectorTI) y el
+   jefe inmediato de cada persona a medida que vayan ingresando.
+
+## 8. Estructura del proyecto
+
+```
+PermisoSalidaEquipos.Web/
+  Authorization/    Roles de aplicación, políticas y el filtro de "perfil completo"
+  Controllers/       Home, Perfil, Solicitudes, Aprobaciones, Admin, Reportes
+  Data/               DbContext (EF Core) y siembra inicial de roles
+  Models/             Entidades: Rol, Usuario, Solicitud, HistorialSolicitud, EstadoSolicitud
+  Services/           Resolución del usuario actual (Windows→BD), envío de correo, notificaciones
+  ViewModels/         Modelos de las vistas (formularios, listados, filtros)
+  Views/              Razor views (Bootstrap 5, incluido localmente en wwwroot/lib)
+  Program.cs          Autenticación Windows (Negotiate/IIS), EF Core, políticas de autorización
+```
+
+## 9. Nota sobre la verificación
+
+Este proyecto se escribió y se revisó cuidadosamente, y la parte de lógica de
+negocio (controladores, servicios, modelos, autorización) se verificó
+compilando el código real contra sustitutos con la misma forma de API que los
+paquetes NuGet reales (Entity Framework Core, autenticación Negociate,
+MailKit, ClosedXML), ya que el entorno donde se generó este proyecto no tiene
+salida a NuGet.org. Aun así, el primer `dotnet restore` en tu máquina de
+desarrollo (paso 6) es el que finalmente compila contra los paquetes reales;
+si algo no compila, es casi seguro un tema de versión de paquete y no de
+lógica — dinos qué error da y lo ajustamos.
+
+## 10. Publicar un sitio de DEMOSTRACIÓN gratuito (Render.com)
+
+Esto NO es el despliegue real de Aligraf (ese es el de las secciones 3 a 7).
+Es una versión pública para mostrar cómo se ve y se usa la aplicación, sin
+depender del dominio de Windows ni de un SQL Server: usa un login donde
+eliges con cuál usuario de ejemplo entrar (Usuario, Jefe Inmediato o Director
+de TI) y una base de datos SQLite que se crea sola con datos de prueba
+(varias solicitudes en distintos estados, para que se vea el flujo completo
+desde el primer momento). Todo esto se activa solo con la variable de entorno
+`ASPNETCORE_ENVIRONMENT=Demo`; el código de negocio es exactamente el mismo.
+
+### Paso 1: Subir el proyecto a GitHub
+
+Este proyecto ya viene como un repositorio git local con un primer commit
+listo. Solo te falta crear el repositorio vacío en GitHub y conectarlo:
+
+1. Entra a <https://github.com/new>, dale un nombre (por ejemplo
+   `permiso-salida-equipos-demo`), y créalo **vacío** (sin README, sin
+   .gitignore — ya los trae este proyecto). Puede ser público o privado; si
+   es privado, Render te va a pedir autorizar el acceso a ese repositorio
+   específico en el paso 2.
+2. En una terminal, dentro de la carpeta de este proyecto:
+
+   ```bash
+   git remote add origin https://github.com/TU-USUARIO/permiso-salida-equipos-demo.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+   (Reemplaza `TU-USUARIO` y el nombre del repositorio por los tuyos. Si te
+   pide iniciar sesión, usa tu usuario de GitHub y, en vez de tu contraseña,
+   un *Personal Access Token* — GitHub ya no acepta la contraseña normal por
+   línea de comandos; lo puedes crear en
+   <https://github.com/settings/tokens>.)
+
+### Paso 2: Crear la cuenta en Render.com y desplegar
+
+1. Ve a <https://render.com> y crea una cuenta gratuita (puedes entrar
+   directamente con tu cuenta de GitHub — no pide tarjeta de crédito para el
+   plan gratuito).
+2. En el dashboard, click en **New +** → **Web Service**.
+3. Conecta tu cuenta de GitHub y selecciona el repositorio que subiste en el
+   Paso 1.
+4. Render va a detectar el `Dockerfile` automáticamente y va a mostrar
+   "Environment: Docker" — déjalo así.
+5. En **Instance Type**, elige **Free**.
+6. En **Environment Variables**, agrega:
+   - `ASPNETCORE_ENVIRONMENT` = `Demo`
+
+   (El Dockerfile ya trae este valor por defecto, así que este paso es
+   opcional, pero es buena idea dejarlo explícito.)
+7. Click en **Create Web Service**. Render va a construir la imagen Docker
+   (ahí sí se descargan los paquetes NuGet reales, sin restricciones de red)
+   y publicar el sitio. La primera vez tarda unos minutos.
+8. Cuando termine, Render te da una URL pública tipo
+   `https://permiso-salida-equipos-demo.onrender.com`. Esa es la demo.
+
+### Cosas a tener en cuenta del plan gratuito de Render
+
+- El servicio se "duerme" después de ~15 minutos sin tráfico, y la próxima
+  visita tarda unos 30-60 segundos en despertar — normal en el plan gratuito.
+- El plan gratuito no tiene disco persistente: cada vez que el servicio se
+  reinicia (se duerme y despierta, o hay un nuevo despliegue), la base de
+  datos SQLite se recrea desde cero con los mismos datos de ejemplo. Es lo
+  esperado para una demo: siempre arranca "limpia".
+- Si más adelante quieres actualizar la demo, basta con hacer `git push` de
+  nuevo a la misma rama — Render vuelve a construir y desplegar solo.
+- Los cuatro usuarios de ejemplo son: **Ana Torres** (Director de TI),
+  **Carlos Mendoza** (Jefe de Producción), y **Laura Gómez** / **Julián
+  Rojas** (Usuario). Entrando como cada uno se puede ver todo el flujo:
+  crear una solicitud, aprobarla como jefe, aprobarla como Director de TI, y
+  el rechazo en cualquiera de los dos pasos.

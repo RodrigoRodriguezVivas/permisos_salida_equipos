@@ -1,0 +1,42 @@
+@model List<SolicitudListItemViewModel>
+@{
+    ViewData["Title"] = "Mis solicitudes";
+}
+
+<div class="d-flex justify-content-between align-items-center">
+    <h1>Mis solicitudes</h1>
+    <a class="btn btn-primary" asp-controller="Solicitudes" asp-action="Crear">Nueva solicitud</a>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted mt-3">Todavía no has radicado ninguna solicitud.</p>
+}
+else
+{
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Equipo</th>
+                <th>Fecha de salida</th>
+                <th>Radicada</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.Id</td>
+                    <td>@s.TipoEquipo - @s.Marca @s.Modelo</td>
+                    <td>@s.FechaSalida.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@s.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                    <td><span class="badge @EstadoSolicitudTexto.ClaseBadge(s.Estado)">@EstadoSolicitudTexto.Descripcion(s.Estado)</span></td>
+                    <td><a asp-controller="Solicitudes" asp-action="Detalle" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">Ver</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

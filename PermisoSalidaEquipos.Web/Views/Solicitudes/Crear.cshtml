@@ -1,0 +1,91 @@
+@model CrearSolicitudViewModel
+@{
+    ViewData["Title"] = "Nueva solicitud de salida de equipo";
+}
+
+<h1>Nueva solicitud de salida de equipo</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-controller="Solicitudes" asp-action="Crear" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <h5 class="mt-3">Datos del equipo</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="TipoEquipo" class="form-label"></label>
+                    <select asp-for="TipoEquipo" class="form-select">
+                        <option value="">-- Selecciona --</option>
+                        @foreach (var tipo in CrearSolicitudViewModel.TiposEquipo)
+                        {
+                            <option value="@tipo">@tipo</option>
+                        }
+                    </select>
+                    <span asp-validation-for="TipoEquipo" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="NumeroSerie" class="form-label"></label>
+                    <input asp-for="NumeroSerie" class="form-control" />
+                    <span asp-validation-for="NumeroSerie" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Marca" class="form-label"></label>
+                    <input asp-for="Marca" class="form-control" />
+                    <span asp-validation-for="Marca" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Modelo" class="form-label"></label>
+                    <input asp-for="Modelo" class="form-control" />
+                    <span asp-validation-for="Modelo" class="text-danger"></span>
+                </div>
+                <div class="col-12 mb-3">
+                    <label asp-for="Accesorios" class="form-label"></label>
+                    <input asp-for="Accesorios" class="form-control" placeholder="Ej: cargador, mouse, maletín" />
+                    <span asp-validation-for="Accesorios" class="text-danger"></span>
+                </div>
+            </div>
+
+            <h5 class="mt-3">Motivo y fechas</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Motivo" class="form-label"></label>
+                    <select asp-for="Motivo" class="form-select">
+                        <option value="">-- Selecciona --</option>
+                        @foreach (var motivo in CrearSolicitudViewModel.Motivos)
+                        {
+                            <option value="@motivo">@motivo</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Motivo" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="MotivoDetalle" class="form-label"></label>
+                    <input asp-for="MotivoDetalle" class="form-control" />
+                    <span asp-validation-for="MotivoDetalle" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FechaSalida" class="form-label"></label>
+                    <input asp-for="FechaSalida" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="FechaSalida" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FechaRetornoEstimada" class="form-label"></label>
+                    <input asp-for="FechaRetornoEstimada" class="form-control" type="date" />
+                    <span asp-validation-for="FechaRetornoEstimada" class="text-danger"></span>
+                </div>
+                <div class="col-12 mb-3">
+                    <label asp-for="Observaciones" class="form-label"></label>
+                    <textarea asp-for="Observaciones" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Observaciones" class="text-danger"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Enviar solicitud</button>
+            <a asp-controller="Solicitudes" asp-action="Mias" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

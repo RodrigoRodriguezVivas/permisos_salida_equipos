@@ -1,0 +1,71 @@
+@model ReporteFiltroViewModel
+@{
+    ViewData["Title"] = "Reportes";
+}
+
+<h1>Historial de solicitudes</h1>
+
+<form asp-controller="Reportes" asp-action="Index" method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-auto">
+        <label asp-for="Desde" class="form-label"></label>
+        <input asp-for="Desde" class="form-control" type="date" />
+    </div>
+    <div class="col-auto">
+        <label asp-for="Hasta" class="form-label"></label>
+        <input asp-for="Hasta" class="form-control" type="date" />
+    </div>
+    <div class="col-auto">
+        <label asp-for="Estado" class="form-label"></label>
+        <select asp-for="Estado" class="form-select">
+            <option value="">-- Todos --</option>
+            @foreach (var estado in Enum.GetValues<EstadoSolicitud>())
+            {
+                <option value="@estado">@EstadoSolicitudTexto.Descripcion(estado)</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <label asp-for="Solicitante" class="form-label"></label>
+        <input asp-for="Solicitante" class="form-control" placeholder="Nombre del solicitante" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a asp-controller="Reportes" asp-action="ExportarExcel"
+           asp-route-Desde="@Model.Desde" asp-route-Hasta="@Model.Hasta"
+           asp-route-Estado="@Model.Estado" asp-route-Solicitante="@Model.Solicitante"
+           class="btn btn-outline-success">Exportar a Excel</a>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Solicitante</th>
+            <th>Equipo</th>
+            <th>Fecha de salida</th>
+            <th>Radicada</th>
+            <th>Estado</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model.Resultados)
+        {
+            <tr>
+                <td>@s.Id</td>
+                <td>@s.SolicitanteNombre</td>
+                <td>@s.TipoEquipo - @s.Marca @s.Modelo</td>
+                <td>@s.FechaSalida.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@s.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                <td><span class="badge @EstadoSolicitudTexto.ClaseBadge(s.Estado)">@EstadoSolicitudTexto.Descripcion(s.Estado)</span></td>
+                <td><a asp-controller="Solicitudes" asp-action="Detalle" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">Ver</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Resultados.Any())
+{
+    <p class="text-muted">No hay resultados para los filtros seleccionados.</p>
+}

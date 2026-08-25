@@ -1,0 +1,16 @@
+# Blueprint opcional de Render.com. Si prefieres el paso a paso manual
+# ("New + > Web Service" en el dashboard), no necesitas este archivo: Render
+# detecta el Dockerfile automáticamente. Este archivo solo sirve para el modo
+# "Blueprint" (New + > Blueprint), que crea el servicio con esta configuración
+# en un solo paso.
+services:
+  - type: web
+    name: permiso-salida-equipos-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Demo
+    healthCheckPath: /Cuenta/Ingresar

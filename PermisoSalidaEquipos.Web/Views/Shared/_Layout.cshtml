@@ -1,0 +1,114 @@
+@using PermisoSalidaEquipos.Web.Services
+@inject ICurrentUserService CurrentUserService
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var usuarioActual = await CurrentUserService.ObtenerUsuarioActualAsync();
+    var rolActual = usuarioActual?.Rol?.Nombre;
+    var esJefe = rolActual == RoleNames.JefeInmediato || rolActual == RoleNames.DirectorTI;
+    var esDirector = rolActual == RoleNames.DirectorTI;
+    var modoDemo = Configuration.GetValue<bool>("ModoDemo");
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Permisos de Salida de Equipos | Alianza Gráfica</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/PermisoSalidaEquipos.Web.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">Permisos de Salida de Equipos</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Mostrar/ocultar navegación">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Inicio</a>
+                        </li>
+                        @if (usuarioActual != null)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Solicitudes" asp-action="Crear">Nueva solicitud</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Solicitudes" asp-action="Mias">Mis solicitudes</a>
+                            </li>
+                            @if (esJefe)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Aprobaciones" asp-action="PendientesJefe">Aprobaciones (jefe inmediato)</a>
+                                </li>
+                            }
+                            @if (esDirector)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Aprobaciones" asp-action="PendientesDirector">Aprobaciones (Director TI)</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Reportes" asp-action="Index">Reportes</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Admin" asp-action="Usuarios">Administración</a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                    @if (usuarioActual != null)
+                    {
+                        <span class="navbar-text">
+                            @usuarioActual.NombreCompleto
+                            @if (!string.IsNullOrEmpty(rolActual))
+                            {
+                                <span class="badge text-bg-secondary ms-1">@rolActual</span>
+                            }
+                        </span>
+                        @if (modoDemo)
+                        {
+                            <form asp-controller="Cuenta" asp-action="Salir" method="post" class="ms-2">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Cambiar de usuario</button>
+                            </form>
+                        }
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+    @if (modoDemo)
+    {
+        <div class="alert alert-warning text-center rounded-0 mb-0 py-1">
+            <strong>Sitio de demostración</strong> — datos de ejemplo, no es el sistema real de Alianza Gráfica.
+        </div>
+    }
+    <div class="container">
+        <main role="main" class="pb-3">
+            @if (TempData["Mensaje"] is string mensaje)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @mensaje
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; @DateTime.Now.Year - Alianza Gráfica S.A. - Permisos de salida de equipos de cómputo
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

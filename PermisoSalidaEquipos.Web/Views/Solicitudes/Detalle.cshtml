@@ -1,0 +1,116 @@
+@model SolicitudDetalleViewModel
+@{
+    ViewData["Title"] = $"Solicitud #{Model.Solicitud.Id}";
+    var s = Model.Solicitud;
+}
+
+<div class="d-flex justify-content-between align-items-center">
+    <h1>Solicitud #@s.Id</h1>
+    <span class="badge fs-6 @EstadoSolicitudTexto.ClaseBadge(s.Estado)">@EstadoSolicitudTexto.Descripcion(s.Estado)</span>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-7">
+        <div class="card mb-3">
+            <div class="card-header">Solicitante</div>
+            <div class="card-body">
+                <p class="mb-1"><strong>@s.Solicitante?.NombreCompleto</strong> - @s.CargoSolicitante</p>
+                <p class="mb-0 text-muted">Cédula: @s.CedulaSolicitante</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Equipo</div>
+            <div class="card-body">
+                <p class="mb-1"><strong>@s.TipoEquipo</strong> - @s.Marca @s.Modelo</p>
+                <p class="mb-1">Serie/placa: @s.NumeroSerie</p>
+                @if (!string.IsNullOrWhiteSpace(s.Accesorios))
+                {
+                    <p class="mb-0">Accesorios: @s.Accesorios</p>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Motivo y fechas</div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Motivo:</strong> @s.Motivo @(!string.IsNullOrWhiteSpace(s.MotivoDetalle) ? $"- {s.MotivoDetalle}" : "")</p>
+                <p class="mb-1"><strong>Fecha de salida:</strong> @s.FechaSalida.ToString("dd/MM/yyyy HH:mm")</p>
+                @if (s.FechaRetornoEstimada.HasValue)
+                {
+                    <p class="mb-1"><strong>Retorno estimado:</strong> @s.FechaRetornoEstimada.Value.ToString("dd/MM/yyyy")</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(s.Observaciones))
+                {
+                    <p class="mb-0"><strong>Observaciones:</strong> @s.Observaciones</p>
+                }
+            </div>
+        </div>
+
+        @if (Model.PuedeDecidirComoJefe)
+        {
+            <div class="card mb-3 border-primary">
+                <div class="card-header bg-primary text-white">Tu decisión como jefe inmediato</div>
+                <div class="card-body">
+                    <form asp-controller="Aprobaciones" asp-action="DecidirJefe" method="post">
+                        <input type="hidden" name="SolicitudId" value="@s.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">Comentario (opcional)</label>
+                            <textarea name="Comentario" class="form-control" rows="2"></textarea>
+                        </div>
+                        <button type="submit" name="Aprobar" value="true" class="btn btn-success">Aprobar</button>
+                        <button type="submit" name="Aprobar" value="false" class="btn btn-danger">Rechazar</button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        @if (Model.PuedeDecidirComoDirector)
+        {
+            <div class="card mb-3 border-primary">
+                <div class="card-header bg-primary text-white">Tu decisión como Director de TI</div>
+                <div class="card-body">
+                    <form asp-controller="Aprobaciones" asp-action="DecidirDirector" method="post">
+                        <input type="hidden" name="SolicitudId" value="@s.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">Comentario (opcional)</label>
+                            <textarea name="Comentario" class="form-control" rows="2"></textarea>
+                        </div>
+                        <button type="submit" name="Aprobar" value="true" class="btn btn-success">Aprobar</button>
+                        <button type="submit" name="Aprobar" value="false" class="btn btn-danger">Rechazar</button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        @if (Model.PuedeCancelar)
+        {
+            <form asp-controller="Solicitudes" asp-action="Cancelar" method="post" onsubmit="return confirm('¿Cancelar esta solicitud?');">
+                <input type="hidden" name="id" value="@s.Id" />
+                <button type="submit" class="btn btn-outline-danger">Cancelar mi solicitud</button>
+            </form>
+        }
+    </div>
+
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">Historial</div>
+            <ul class="list-group list-group-flush">
+                @foreach (var h in s.Historial.OrderBy(x => x.Fecha))
+                {
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <strong>@EstadoSolicitudTexto.Descripcion(h.Estado)</strong>
+                            <small class="text-muted">@h.Fecha.ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+                        <div class="text-muted">@h.Usuario?.NombreCompleto</div>
+                        @if (!string.IsNullOrWhiteSpace(h.Comentario))
+                        {
+                            <div>@h.Comentario</div>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>

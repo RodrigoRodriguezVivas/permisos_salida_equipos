@@ -1,0 +1,39 @@
+@model List<SolicitudListItemViewModel>
+@{
+    ViewData["Title"] = "Aprobaciones pendientes (jefe inmediato)";
+}
+
+<h1>Solicitudes pendientes de tu aprobación (jefe inmediato)</h1>
+
+@if (!Model.Any())
+{
+    <p class="text-muted mt-3">No tienes solicitudes pendientes por aprobar.</p>
+}
+else
+{
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Solicitante</th>
+                <th>Equipo</th>
+                <th>Fecha de salida</th>
+                <th>Radicada</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.Id</td>
+                    <td>@s.SolicitanteNombre</td>
+                    <td>@s.TipoEquipo - @s.Marca @s.Modelo</td>
+                    <td>@s.FechaSalida.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@s.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                    <td><a asp-controller="Solicitudes" asp-action="Detalle" asp-route-id="@s.Id" class="btn btn-sm btn-primary">Revisar</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

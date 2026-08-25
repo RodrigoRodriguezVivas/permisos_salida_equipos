@@ -1,0 +1,35 @@
+@model List<UsuarioAdminListItemViewModel>
+@{
+    ViewData["Title"] = "Administración de usuarios";
+}
+
+<h1>Usuarios y roles</h1>
+<p class="text-muted">Asigna el rol de cada persona (Usuario, Jefe Inmediato o Director de TI) y su jefe inmediato.</p>
+
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th>Usuario de dominio</th>
+            <th>Nombre</th>
+            <th>Cargo</th>
+            <th>Rol</th>
+            <th>Jefe inmediato</th>
+            <th>Activo</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.NombreUsuarioDominio</td>
+                <td>@u.NombreCompleto</td>
+                <td>@u.Cargo</td>
+                <td><span class="badge text-bg-secondary">@u.RolNombre</span></td>
+                <td>@u.JefeInmediatoNombre</td>
+                <td>@(u.Activo ? "Sí" : "No")</td>
+                <td><a asp-controller="Admin" asp-action="Editar" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary">Editar</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
