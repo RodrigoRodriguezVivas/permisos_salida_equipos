@@ -28,14 +28,19 @@ namespace PermisoSalidaEquipos.Web.Data
                 await db.Database.EnsureCreatedAsync();
             }
 
-            if (!db.Roles.Any())
+            // Cada rol se siembra por separado (en vez de solo comprobar "¿ya hay
+            // roles?") para que, si se agrega un rol nuevo más adelante (como pasó
+            // con Guarda de Seguridad), una base de datos ya existente lo reciba
+            // igual la próxima vez que arranque la aplicación, sin necesidad de
+            // volver a ejecutar el script SQL a mano.
+            foreach (var nombreRol in new[] { RoleNames.Usuario, RoleNames.JefeInmediato, RoleNames.DirectorTI, RoleNames.GuardaSeguridad })
             {
-                db.Roles.AddRange(
-                    new Rol { Nombre = RoleNames.Usuario },
-                    new Rol { Nombre = RoleNames.JefeInmediato },
-                    new Rol { Nombre = RoleNames.DirectorTI });
-                await db.SaveChangesAsync();
+                if (!await db.Roles.AnyAsync(r => r.Nombre == nombreRol))
+                {
+                    db.Roles.Add(new Rol { Nombre = nombreRol });
+                }
             }
+            await db.SaveChangesAsync();
 
             if (!string.IsNullOrWhiteSpace(usuarioDominioAdministradorInicial) && !db.Usuarios.Any())
             {
@@ -71,6 +76,7 @@ namespace PermisoSalidaEquipos.Web.Data
             var rolUsuario = await db.Roles.SingleAsync(r => r.Nombre == RoleNames.Usuario);
             var rolJefe = await db.Roles.SingleAsync(r => r.Nombre == RoleNames.JefeInmediato);
             var rolDirector = await db.Roles.SingleAsync(r => r.Nombre == RoleNames.DirectorTI);
+            var rolGuarda = await db.Roles.SingleAsync(r => r.Nombre == RoleNames.GuardaSeguridad);
 
             var director = await ObtenerOCrearUsuarioDemoAsync(db, "demo.director", "Rodrigo Rodriguez Vivas", "rodrigo.demo@alianzagrafica.com",
                 "1000111222", "Director de TI", rolDirector.Id, jefeInmediatoId: null);
@@ -83,6 +89,12 @@ namespace PermisoSalidaEquipos.Web.Data
 
             var usuario2 = await ObtenerOCrearUsuarioDemoAsync(db, "demo.usuario2", "Julián Rojas", "julian.demo@alianzagrafica.com",
                 "1000777888", "Auxiliar de Preprensa", rolUsuario.Id, jefeInmediatoId: jefe.Id);
+
+            // Sin nombre de persona a propósito: los guardas rotan por turno, así que
+            // la cuenta queda genérica ("Guarda de Seguridad") en vez de a nombre de
+            // alguien en particular.
+            var guarda = await ObtenerOCrearUsuarioDemoAsync(db, "demo.guarda", "Guarda de Seguridad", "vigilancia.demo@alianzagrafica.com",
+                "1000999000", "Guarda de Seguridad", rolGuarda.Id, jefeInmediatoId: null);
 
             await db.SaveChangesAsync();
 
@@ -120,6 +132,23 @@ namespace PermisoSalidaEquipos.Web.Data
             solicitud4.FechaDecisionJefe = ahora.AddDays(-3).AddHours(2);
             solicitud4.ComentarioJefe = "No aplica para uso personal.";
             await AgregarHistorialAsync(db, solicitud4, EstadoSolicitud.RechazadaJefe, jefe.Id, ahora.AddDays(-3).AddHours(2), "No aplica para uso personal.");
+
+            // 5) Aprobada, verificada por el Guarda de Seguridad y ya salió de la
+            // empresa (para ver ese último paso del flujo también).
+            var solicitud5 = await CrearSolicitudDemoAsync(db, usuario2, jefe.Id, EstadoSolicitud.SalioDeLaEmpresa, ahora.AddDays(-7),
+                "Portátil", "Lenovo", "ThinkPad T14", "DEMO-SN-005", "Cargador, maletín",
+                "Evento externo", "Feria de la industria gráfica", ahora.AddDays(-6), ahora.AddDays(-2));
+            solicitud5.FechaDecisionJefe = ahora.AddDays(-7).AddHours(2);
+            solicitud5.ComentarioJefe = "Aprobado.";
+            solicitud5.DirectorTIRevisorId = director.Id;
+            solicitud5.FechaDecisionDirectorTI = ahora.AddDays(-7).AddHours(3);
+            solicitud5.ComentarioDirectorTI = "Aprobado.";
+            solicitud5.RegistradaSalidaPorId = guarda.Id;
+            solicitud5.FechaSalidaRegistrada = ahora.AddDays(-6).AddHours(8);
+            solicitud5.ComentarioGuarda = "Verificado contra la solicitud, sale con el empleado.";
+            await AgregarHistorialAsync(db, solicitud5, EstadoSolicitud.PendienteDirectorTI, jefe.Id, ahora.AddDays(-7).AddHours(2), "Aprobado.");
+            await AgregarHistorialAsync(db, solicitud5, EstadoSolicitud.Aprobada, director.Id, ahora.AddDays(-7).AddHours(3), "Aprobado.");
+            await AgregarHistorialAsync(db, solicitud5, EstadoSolicitud.SalioDeLaEmpresa, guarda.Id, ahora.AddDays(-6).AddHours(8), "Verificado contra la solicitud, sale con el empleado.");
 
             await db.SaveChangesAsync();
         }

@@ -46,6 +46,24 @@
                 </div>
             </div>
         </div>
+    }
+
+    @if (rolActual == RoleNames.GuardaSeguridad || rolActual == RoleNames.DirectorTI)
+    {
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Salidas por confirmar (portería)</h5>
+                    <p class="card-text display-6">@ViewBag.PendientesComoGuarda</p>
+                    <p class="text-muted">equipos aprobados esperando salir de la empresa</p>
+                    <a class="btn btn-primary" asp-controller="Guardia" asp-action="PendientesSalida">Revisar</a>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (rolActual == RoleNames.DirectorTI)
+    {
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">

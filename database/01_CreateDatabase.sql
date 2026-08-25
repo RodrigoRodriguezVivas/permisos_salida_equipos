@@ -63,7 +63,7 @@ BEGIN
         FechaRetornoEstimada   DATETIME2           NULL,
         Observaciones          NVARCHAR(500)       NULL,
 
-        Estado                 INT                NOT NULL, -- 0 PendienteJefe, 1 PendienteDirectorTI, 2 Aprobada, 3 RechazadaJefe, 4 RechazadaDirectorTI, 5 CanceladaPorSolicitante
+        Estado                 INT                NOT NULL, -- 0 PendienteJefe, 1 PendienteDirectorTI, 2 Aprobada, 3 RechazadaJefe, 4 RechazadaDirectorTI, 5 CanceladaPorSolicitante, 6 SalioDeLaEmpresa
         FechaCreacion          DATETIME2          NOT NULL DEFAULT(SYSDATETIME()),
 
         JefeInmediatoId        INT                NOT NULL CONSTRAINT FK_Solicitudes_JefeInmediato REFERENCES dbo.Usuarios(Id),
@@ -72,7 +72,11 @@ BEGIN
 
         DirectorTIRevisorId    INT                 NULL CONSTRAINT FK_Solicitudes_DirectorTI REFERENCES dbo.Usuarios(Id),
         FechaDecisionDirectorTI DATETIME2          NULL,
-        ComentarioDirectorTI   NVARCHAR(500)        NULL
+        ComentarioDirectorTI   NVARCHAR(500)        NULL,
+
+        RegistradaSalidaPorId  INT                 NULL CONSTRAINT FK_Solicitudes_RegistradaSalidaPor REFERENCES dbo.Usuarios(Id),
+        FechaSalidaRegistrada  DATETIME2           NULL,
+        ComentarioGuarda       NVARCHAR(500)        NULL
     );
     CREATE INDEX IX_Solicitudes_SolicitanteId ON dbo.Solicitudes(SolicitanteId);
     CREATE INDEX IX_Solicitudes_JefeInmediatoId ON dbo.Solicitudes(JefeInmediatoId);
@@ -93,11 +97,57 @@ END
 GO
 
 /* ---------------------------------------------------------------------
-   Siembra de los tres roles fijos de la aplicación.
+   Si la base de datos ya existía de una instalación anterior (antes de que
+   existiera el rol Guarda de Seguridad), estas columnas y este rol pueden
+   faltar. Estos bloques agregan lo que falte sin afectar los datos
+   existentes; en una instalación nueva ya quedan creados por el CREATE
+   TABLE de arriba, así que aquí no hacen nada.
    --------------------------------------------------------------------- */
-IF NOT EXISTS (SELECT 1 FROM dbo.Roles)
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Solicitudes') AND name = 'RegistradaSalidaPorId')
 BEGIN
-    INSERT INTO dbo.Roles (Nombre) VALUES ('Usuario'), ('JefeInmediato'), ('DirectorTI');
+    ALTER TABLE dbo.Solicitudes ADD RegistradaSalidaPorId INT NULL CONSTRAINT FK_Solicitudes_RegistradaSalidaPor REFERENCES dbo.Usuarios(Id);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Solicitudes') AND name = 'FechaSalidaRegistrada')
+BEGIN
+    ALTER TABLE dbo.Solicitudes ADD FechaSalidaRegistrada DATETIME2 NULL;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Solicitudes') AND name = 'ComentarioGuarda')
+BEGIN
+    ALTER TABLE dbo.Solicitudes ADD ComentarioGuarda NVARCHAR(500) NULL;
+END
+GO
+
+/* ---------------------------------------------------------------------
+   Siembra de los cuatro roles fijos de la aplicación. Cada uno se agrega
+   de forma independiente (no solo cuando la tabla Roles está vacía), para
+   que una base de datos ya provisionada anteriormente también reciba el
+   rol Guarda de Seguridad al ejecutar este script de nuevo.
+   --------------------------------------------------------------------- */
+IF NOT EXISTS (SELECT 1 FROM dbo.Roles WHERE Nombre = 'Usuario')
+BEGIN
+    INSERT INTO dbo.Roles (Nombre) VALUES ('Usuario');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Roles WHERE Nombre = 'JefeInmediato')
+BEGIN
+    INSERT INTO dbo.Roles (Nombre) VALUES ('JefeInmediato');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Roles WHERE Nombre = 'DirectorTI')
+BEGIN
+    INSERT INTO dbo.Roles (Nombre) VALUES ('DirectorTI');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Roles WHERE Nombre = 'GuardaSeguridad')
+BEGIN
+    INSERT INTO dbo.Roles (Nombre) VALUES ('GuardaSeguridad');
 END
 GO
 

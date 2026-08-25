@@ -1,0 +1,43 @@
+@model List<SolicitudListItemViewModel>
+@{
+    ViewData["Title"] = "Salidas por confirmar (portería)";
+}
+
+<h1>Equipos aprobados, pendientes de salir de la empresa</h1>
+<p class="text-muted">
+    Estas solicitudes ya tienen aprobación final del Director de TI. Verifica el equipo contra la
+    solicitud y confirma su salida desde el detalle de cada una.
+</p>
+
+@if (!Model.Any())
+{
+    <p class="text-muted mt-3">No hay equipos aprobados pendientes de salir en este momento.</p>
+}
+else
+{
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Solicitante</th>
+                <th>Equipo</th>
+                <th>Fecha de salida</th>
+                <th>Radicada</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.Id</td>
+                    <td>@s.SolicitanteNombre</td>
+                    <td>@s.TipoEquipo - @s.Marca @s.Modelo</td>
+                    <td>@s.FechaSalida.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@s.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                    <td><a asp-controller="Solicitudes" asp-action="Detalle" asp-route-id="@s.Id" class="btn btn-sm btn-primary">Ver / confirmar salida</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

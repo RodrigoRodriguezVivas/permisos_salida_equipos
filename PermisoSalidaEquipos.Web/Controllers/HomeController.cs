@@ -49,11 +49,18 @@ namespace PermisoSalidaEquipos.Web.Controllers
                 pendientesComoDirector = await _db.Solicitudes.CountAsync(s => s.Estado == EstadoSolicitud.PendienteDirectorTI);
             }
 
+            var pendientesComoGuarda = 0;
+            if (usuario.Rol?.Nombre == RoleNames.GuardaSeguridad || usuario.Rol?.Nombre == RoleNames.DirectorTI)
+            {
+                pendientesComoGuarda = await _db.Solicitudes.CountAsync(s => s.Estado == EstadoSolicitud.Aprobada);
+            }
+
             ViewBag.Usuario = usuario;
             ViewBag.MisSolicitudesPendientes = misSolicitudesPendientes;
             ViewBag.MisSolicitudesTotal = misSolicitudesTotal;
             ViewBag.PendientesComoJefe = pendientesComoJefe;
             ViewBag.PendientesComoDirector = pendientesComoDirector;
+            ViewBag.PendientesComoGuarda = pendientesComoGuarda;
 
             return View();
         }

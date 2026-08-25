@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PermisoSalidaEquipos.Web.Authorization;
 
 namespace PermisoSalidaEquipos.Web.Models
 {
@@ -51,9 +52,10 @@ namespace PermisoSalidaEquipos.Web.Models
 
         /// <summary>
         /// El perfil se considera completo cuando tiene cédula, cargo y (salvo que el
-        /// propio usuario sea Director de TI) un jefe inmediato asignado.
+        /// rol esté exento, como Director de TI o Guarda de Seguridad) un jefe
+        /// inmediato asignado.
         /// </summary>
-        public bool PerfilCompleto(string rolDirectorTI)
+        public bool PerfilCompleto()
         {
             var datosBasicos = !string.IsNullOrWhiteSpace(Cedula) && !string.IsNullOrWhiteSpace(Cargo);
             if (!datosBasicos)
@@ -61,7 +63,7 @@ namespace PermisoSalidaEquipos.Web.Models
                 return false;
             }
 
-            if (Rol?.Nombre == rolDirectorTI)
+            if (RoleNames.ExentoDeJefeInmediato(Rol?.Nombre))
             {
                 return true;
             }

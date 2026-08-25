@@ -50,6 +50,16 @@ namespace PermisoSalidaEquipos.Web.Models
         public DateTime? FechaDecisionDirectorTI { get; set; }
         public string? ComentarioDirectorTI { get; set; }
 
+        /// <summary>
+        /// Confirmación de portería: cuándo (y quién, de turno) verificó que el
+        /// equipo efectivamente salió de las instalaciones. Solo aplica a
+        /// solicitudes ya Aprobadas.
+        /// </summary>
+        public int? RegistradaSalidaPorId { get; set; }
+        public Usuario? RegistradaSalidaPor { get; set; }
+        public DateTime? FechaSalidaRegistrada { get; set; }
+        public string? ComentarioGuarda { get; set; }
+
         public ICollection<HistorialSolicitud> Historial { get; set; } = new List<HistorialSolicitud>();
     }
 }

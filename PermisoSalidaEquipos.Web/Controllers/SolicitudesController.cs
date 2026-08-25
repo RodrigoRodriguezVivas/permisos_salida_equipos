@@ -67,10 +67,12 @@ namespace PermisoSalidaEquipos.Web.Controllers
             var usuario = await _currentUserService.ObtenerUsuarioActualAsync();
             if (usuario == null) return Challenge();
 
-            if (!usuario.JefeInmediatoId.HasValue)
+            var vaDirectoADirector = RoleNames.ExentoDeJefeInmediato(usuario.Rol?.Nombre);
+
+            if (!vaDirectoADirector && !usuario.JefeInmediatoId.HasValue)
             {
                 // No debería ocurrir: PerfilCompletoFilter ya exige jefe inmediato salvo
-                // para el Director de TI, que en ese caso radica directamente al Director.
+                // para los roles exentos, que en ese caso radican directamente al Director.
                 ModelState.AddModelError(string.Empty, "No tienes un jefe inmediato asignado. Contacta al Director de TI.");
             }
 
@@ -83,8 +85,6 @@ namespace PermisoSalidaEquipos.Web.Controllers
             {
                 return View(input);
             }
-
-            var esDirectorTI = usuario.Rol?.Nombre == RoleNames.DirectorTI;
 
             var solicitud = new Solicitud
             {
@@ -102,10 +102,11 @@ namespace PermisoSalidaEquipos.Web.Controllers
                 FechaRetornoEstimada = input.FechaRetornoEstimada,
                 Observaciones = input.Observaciones,
                 FechaCreacion = DateTime.Now,
-                // El Director de TI no tiene jefe inmediato: su propia solicitud entra
-                // directamente a la etapa de aprobación del Director de TI.
-                JefeInmediatoId = esDirectorTI ? usuario.Id : usuario.JefeInmediatoId!.Value,
-                Estado = esDirectorTI ? EstadoSolicitud.PendienteDirectorTI : EstadoSolicitud.PendienteJefe
+                // Los roles exentos de jefe inmediato (Director de TI, Guarda de
+                // Seguridad) no tienen a quién asignarle la etapa de jefe: su propia
+                // solicitud entra directamente a la etapa de aprobación del Director de TI.
+                JefeInmediatoId = vaDirectoADirector ? usuario.Id : usuario.JefeInmediatoId!.Value,
+                Estado = vaDirectoADirector ? EstadoSolicitud.PendienteDirectorTI : EstadoSolicitud.PendienteJefe
             };
 
             _db.Solicitudes.Add(solicitud);
@@ -123,9 +124,17 @@ namespace PermisoSalidaEquipos.Web.Controllers
 
             solicitud.Solicitante = usuario;
 
-            if (esDirectorTI)
+            if (vaDirectoADirector)
             {
-                await _notificaciones.NotificarPendienteDirectorTIAsync(solicitud, usuario);
+                // Notifica a todos los usuarios con rol Director de TI (puede haber
+                // más de uno), no solo a quien radicó la solicitud.
+                var directoresTI = await _db.Usuarios
+                    .Where(u => u.Activo && u.Rol!.Nombre == RoleNames.DirectorTI)
+                    .ToListAsync();
+                foreach (var director in directoresTI)
+                {
+                    await _notificaciones.NotificarPendienteDirectorTIAsync(solicitud, director);
+                }
             }
             else
             {
@@ -149,6 +158,7 @@ namespace PermisoSalidaEquipos.Web.Controllers
                 .Include(s => s.Solicitante)
                 .Include(s => s.JefeInmediatoAsignado)
                 .Include(s => s.DirectorTIRevisor)
+                .Include(s => s.RegistradaSalidaPor)
                 .Include(s => s.Historial).ThenInclude(h => h.Usuario)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
@@ -156,13 +166,16 @@ namespace PermisoSalidaEquipos.Web.Controllers
 
             var esRolJefe = usuario.Rol?.Nombre == RoleNames.JefeInmediato || usuario.Rol?.Nombre == RoleNames.DirectorTI;
             var esDirector = usuario.Rol?.Nombre == RoleNames.DirectorTI;
+            var esGuarda = usuario.Rol?.Nombre == RoleNames.GuardaSeguridad || esDirector;
 
             var esDueno = solicitud.SolicitanteId == usuario.Id;
             var esJefeAsignado = solicitud.JefeInmediatoId == usuario.Id;
+            var yaSalioOListaParaSalir = solicitud.Estado == EstadoSolicitud.Aprobada || solicitud.Estado == EstadoSolicitud.SalioDeLaEmpresa;
 
-            // Solo puede ver la solicitud: el dueño, su jefe asignado, o cualquier
-            // Director de TI (para poder hacer seguimiento y reportes).
-            if (!esDueno && !esJefeAsignado && !esDirector)
+            // Solo puede ver la solicitud: el dueño, su jefe asignado, cualquier
+            // Director de TI (para poder hacer seguimiento y reportes), o el Guarda
+            // de Seguridad una vez la solicitud ya está aprobada (o ya salió).
+            if (!esDueno && !esJefeAsignado && !esDirector && !(esGuarda && yaSalioOListaParaSalir))
             {
                 return Forbid();
             }
@@ -172,6 +185,7 @@ namespace PermisoSalidaEquipos.Web.Controllers
                 Solicitud = solicitud,
                 PuedeDecidirComoJefe = esJefeAsignado && esRolJefe && solicitud.Estado == EstadoSolicitud.PendienteJefe,
                 PuedeDecidirComoDirector = esDirector && solicitud.Estado == EstadoSolicitud.PendienteDirectorTI,
+                PuedeConfirmarSalida = esGuarda && solicitud.Estado == EstadoSolicitud.Aprobada,
                 PuedeCancelar = esDueno && (solicitud.Estado == EstadoSolicitud.PendienteJefe || solicitud.Estado == EstadoSolicitud.PendienteDirectorTI)
             };
 

@@ -64,6 +64,15 @@ namespace PermisoSalidaEquipos.Web.ViewModels
         public bool Aprobar { get; set; }
     }
 
+    /// <summary>Confirmación del Guarda de Seguridad de que el equipo salió de la empresa.</summary>
+    public class ConfirmarSalidaViewModel
+    {
+        public int SolicitudId { get; set; }
+
+        [Display(Name = "Observaciones")]
+        public string? Comentario { get; set; }
+    }
+
     public class SolicitudListItemViewModel
     {
         public int Id { get; set; }
@@ -81,6 +90,7 @@ namespace PermisoSalidaEquipos.Web.ViewModels
         public Solicitud Solicitud { get; set; } = null!;
         public bool PuedeDecidirComoJefe { get; set; }
         public bool PuedeDecidirComoDirector { get; set; }
+        public bool PuedeConfirmarSalida { get; set; }
         public bool PuedeCancelar { get; set; }
     }
 
@@ -94,6 +104,7 @@ namespace PermisoSalidaEquipos.Web.ViewModels
             EstadoSolicitud.RechazadaJefe => "Rechazada por el jefe inmediato",
             EstadoSolicitud.RechazadaDirectorTI => "Rechazada por el Director de TI",
             EstadoSolicitud.CanceladaPorSolicitante => "Cancelada por el solicitante",
+            EstadoSolicitud.SalioDeLaEmpresa => "Equipo entregado, salió de la empresa",
             _ => estado.ToString()
         };
 
@@ -105,6 +116,7 @@ namespace PermisoSalidaEquipos.Web.ViewModels
             EstadoSolicitud.RechazadaJefe => "text-bg-danger",
             EstadoSolicitud.RechazadaDirectorTI => "text-bg-danger",
             EstadoSolicitud.CanceladaPorSolicitante => "text-bg-secondary",
+            EstadoSolicitud.SalioDeLaEmpresa => "text-bg-primary",
             _ => "text-bg-secondary"
         };
     }

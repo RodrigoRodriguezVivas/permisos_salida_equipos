@@ -31,7 +31,7 @@ namespace PermisoSalidaEquipos.Web.Controllers
             }
 
             // Si ya está completo, no hay nada que hacer aquí: al inicio.
-            if (usuario.PerfilCompleto(RoleNames.DirectorTI))
+            if (usuario.PerfilCompleto())
             {
                 return RedirectToAction("Index", "Home");
             }
@@ -45,7 +45,7 @@ namespace PermisoSalidaEquipos.Web.Controllers
                 Cedula = usuario.Cedula ?? string.Empty,
                 Cargo = usuario.Cargo ?? string.Empty,
                 JefeInmediatoId = usuario.JefeInmediatoId,
-                EsDirectorTI = usuario.Rol?.Nombre == RoleNames.DirectorTI,
+                ExentoDeJefeInmediato = RoleNames.ExentoDeJefeInmediato(usuario.Rol?.Nombre),
                 JefesDisponibles = await ObtenerJefesDisponiblesAsync(usuario.Id)
             };
 
@@ -62,8 +62,8 @@ namespace PermisoSalidaEquipos.Web.Controllers
                 return Challenge();
             }
 
-            var esDirectorTI = usuario.Rol?.Nombre == RoleNames.DirectorTI;
-            if (!esDirectorTI && modelo.JefeInmediatoId == null)
+            var exentoDeJefe = RoleNames.ExentoDeJefeInmediato(usuario.Rol?.Nombre);
+            if (!exentoDeJefe && modelo.JefeInmediatoId == null)
             {
                 ModelState.AddModelError(nameof(modelo.JefeInmediatoId), "Selecciona tu jefe inmediato.");
             }
@@ -72,7 +72,7 @@ namespace PermisoSalidaEquipos.Web.Controllers
             {
                 modelo.UsuarioId = usuario.Id;
                 modelo.NombreUsuarioDominio = usuario.NombreUsuarioDominio;
-                modelo.EsDirectorTI = esDirectorTI;
+                modelo.ExentoDeJefeInmediato = exentoDeJefe;
                 modelo.JefesDisponibles = await ObtenerJefesDisponiblesAsync(usuario.Id);
                 return View(modelo);
             }
@@ -81,7 +81,7 @@ namespace PermisoSalidaEquipos.Web.Controllers
             usuario.Correo = modelo.Correo.Trim();
             usuario.Cedula = modelo.Cedula.Trim();
             usuario.Cargo = modelo.Cargo.Trim();
-            usuario.JefeInmediatoId = esDirectorTI ? null : modelo.JefeInmediatoId;
+            usuario.JefeInmediatoId = exentoDeJefe ? null : modelo.JefeInmediatoId;
 
             await _db.SaveChangesAsync();
 

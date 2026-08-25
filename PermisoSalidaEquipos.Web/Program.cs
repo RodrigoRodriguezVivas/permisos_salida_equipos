@@ -57,6 +57,9 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy(PolicyNames.RequiereDirectorTI, policy =>
         policy.Requirements.Add(new RoleRequirement(RoleNames.DirectorTI)));
+
+    options.AddPolicy(PolicyNames.RequiereGuardaSeguridad, policy =>
+        policy.Requirements.Add(new RoleRequirement(RoleNames.GuardaSeguridad)));
 });
 
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, RoleAuthorizationHandler>();

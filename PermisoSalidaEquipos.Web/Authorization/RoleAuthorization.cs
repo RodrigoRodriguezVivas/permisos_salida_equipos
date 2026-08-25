@@ -33,10 +33,12 @@ namespace PermisoSalidaEquipos.Web.Authorization
             var usuario = await _currentUserService.ObtenerUsuarioActualAsync();
 
             // El Director de TI tiene acceso implícito a todo lo que requiera el rol
-            // JefeInmediato, además de sus propias pantallas exclusivas.
+            // JefeInmediato o el rol Guarda de Seguridad, además de sus propias
+            // pantallas exclusivas (es el rol de más alto nivel de la aplicación).
             if (usuario?.Rol != null &&
                 (usuario.Rol.Nombre == requirement.RolRequerido ||
-                 (requirement.RolRequerido == RoleNames.JefeInmediato && usuario.Rol.Nombre == RoleNames.DirectorTI)))
+                 (requirement.RolRequerido == RoleNames.JefeInmediato && usuario.Rol.Nombre == RoleNames.DirectorTI) ||
+                 (requirement.RolRequerido == RoleNames.GuardaSeguridad && usuario.Rol.Nombre == RoleNames.DirectorTI)))
             {
                 context.Succeed(requirement);
             }

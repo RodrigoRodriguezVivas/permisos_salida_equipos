@@ -47,6 +47,39 @@
             </div>
         </div>
 
+        @if (s.Estado == EstadoSolicitud.SalioDeLaEmpresa)
+        {
+            <div class="card mb-3 border-primary">
+                <div class="card-header bg-primary text-white">Salida del equipo confirmada por portería</div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Registrada por:</strong> @(s.RegistradaSalidaPor?.NombreCompleto ?? "Guarda de Seguridad")</p>
+                    <p class="mb-1"><strong>Fecha:</strong> @s.FechaSalidaRegistrada?.ToString("dd/MM/yyyy HH:mm")</p>
+                    @if (!string.IsNullOrWhiteSpace(s.ComentarioGuarda))
+                    {
+                        <p class="mb-0"><strong>Observaciones:</strong> @s.ComentarioGuarda</p>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (Model.PuedeConfirmarSalida)
+        {
+            <div class="card mb-3 border-primary">
+                <div class="card-header bg-primary text-white">Confirmar salida del equipo</div>
+                <div class="card-body">
+                    <p class="text-muted">Verifica el equipo contra los datos de esta solicitud antes de confirmar.</p>
+                    <form asp-controller="Guardia" asp-action="ConfirmarSalida" method="post">
+                        <input type="hidden" name="SolicitudId" value="@s.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones (opcional)</label>
+                            <textarea name="Comentario" class="form-control" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">Confirmar que el equipo salió de la empresa</button>
+                    </form>
+                </div>
+            </div>
+        }
+
         @if (Model.PuedeDecidirComoJefe)
         {
             <div class="card mb-3 border-primary">

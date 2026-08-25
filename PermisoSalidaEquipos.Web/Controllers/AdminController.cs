@@ -10,8 +10,8 @@ using PermisoSalidaEquipos.Web.ViewModels;
 namespace PermisoSalidaEquipos.Web.Controllers
 {
     /// <summary>
-    /// Administración de usuarios: asignar Rol (Usuario / JefeInmediato / DirectorTI)
-    /// y el jefe inmediato de cada persona. Exclusivo del Director de TI.
+    /// Administración de usuarios: asignar Rol (Usuario / JefeInmediato / DirectorTI /
+    /// GuardaSeguridad) y el jefe inmediato de cada persona. Exclusivo del Director de TI.
     /// </summary>
     [Authorize(Policy = PolicyNames.RequiereDirectorTI)]
     public class AdminController : Controller

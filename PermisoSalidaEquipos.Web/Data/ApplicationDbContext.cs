@@ -62,6 +62,7 @@ namespace PermisoSalidaEquipos.Web.Data
                 entity.Property(s => s.Observaciones).HasMaxLength(500);
                 entity.Property(s => s.ComentarioJefe).HasMaxLength(500);
                 entity.Property(s => s.ComentarioDirectorTI).HasMaxLength(500);
+                entity.Property(s => s.ComentarioGuarda).HasMaxLength(500);
                 entity.Property(s => s.Estado).HasConversion<int>();
 
                 entity.HasOne(s => s.Solicitante)
@@ -77,6 +78,11 @@ namespace PermisoSalidaEquipos.Web.Data
                 entity.HasOne(s => s.DirectorTIRevisor)
                     .WithMany()
                     .HasForeignKey(s => s.DirectorTIRevisorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(s => s.RegistradaSalidaPor)
+                    .WithMany()
+                    .HasForeignKey(s => s.RegistradaSalidaPorId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

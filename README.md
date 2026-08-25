@@ -1,7 +1,8 @@
 # Permisos de Salida de Equipos de Cómputo — Alianza Gráfica S.A.
 
 Aplicación web para gestionar el permiso de salida de equipos de cómputo, con
-flujo de aprobación en dos pasos (jefe inmediato → Director de TI), ingreso
+flujo de aprobación en dos pasos (jefe inmediato → Director de TI) más
+confirmación física de salida en portería (Guarda de Seguridad), ingreso
 automático con la cuenta de dominio (Windows/Active Directory) y datos
 almacenados en SQL Server. Construida en ASP.NET Core 8 MVC para hospedarse
 en el IIS de Aligraf.
@@ -25,15 +26,26 @@ en el IIS de Aligraf.
    (jefe inmediato)". Puede aprobar (pasa al Director de TI) o rechazar.
 3. **Director de TI**: recibe la solicitud aprobada por el jefe, la revisa en
    "Aprobaciones (Director TI)" y da la aprobación final o la rechaza.
-4. El solicitante recibe un correo en cada cambio de estado. Todo el
-   historial queda visible en el detalle de cada solicitud.
-5. El Director de TI tiene además acceso a **Administración** (para asignar
-   el rol y el jefe inmediato de cada persona) y **Reportes** (historial
-   completo, filtros y exportación a Excel).
+4. **Guarda de Seguridad**: una vez la solicitud tiene aprobación final,
+   queda visible en "Salidas (portería)" para cualquier guarda. Cuando el
+   equipo efectivamente sale de las instalaciones, el guarda de turno lo
+   busca ahí, verifica los datos contra el equipo físico y confirma la
+   salida desde el detalle de la solicitud. Este rol no está ligado a una
+   persona en particular (los guardas rotan por turno): el usuario de
+   ejemplo se llama simplemente "Guarda de Seguridad", y en el despliegue
+   real basta con crear una sola cuenta compartida de portería con este rol.
+5. El solicitante recibe un correo en cada cambio de estado, incluyendo la
+   confirmación de salida. Todo el historial queda visible en el detalle de
+   cada solicitud.
+6. El Director de TI tiene además acceso a **Administración** (para asignar
+   el rol y el jefe inmediato de cada persona), **Reportes** (historial
+   completo, filtros y exportación a Excel) y, al igual que el Guarda de
+   Seguridad, a "Salidas (portería)" para poder hacer seguimiento.
 
-Los tres roles de la aplicación (Usuario, JefeInmediato, DirectorTI) son
-independientes de los grupos de Windows: se administran desde la propia
-aplicación, en Administración > Usuarios, exclusivo del Director de TI.
+Los cuatro roles de la aplicación (Usuario, JefeInmediato, DirectorTI,
+GuardaSeguridad) son independientes de los grupos de Windows: se administran
+desde la propia aplicación, en Administración > Usuarios, exclusivo del
+Director de TI.
 
 ## 3. Requisitos en el servidor (IIS de Aligraf)
 
@@ -141,7 +153,7 @@ Copia el contenido de la carpeta `publish` al directorio del sitio en IIS
 ```
 PermisoSalidaEquipos.Web/
   Authorization/    Roles de aplicación, políticas y el filtro de "perfil completo"
-  Controllers/       Home, Perfil, Solicitudes, Aprobaciones, Admin, Reportes
+  Controllers/       Home, Perfil, Solicitudes, Aprobaciones, Guardia, Admin, Reportes
   Data/               DbContext (EF Core) y siembra inicial de roles
   Models/             Entidades: Rol, Usuario, Solicitud, HistorialSolicitud, EstadoSolicitud
   Services/           Resolución del usuario actual (Windows→BD), envío de correo, notificaciones
@@ -229,8 +241,11 @@ listo. Solo te falta crear el repositorio vacío en GitHub y conectarlo:
   esperado para una demo: siempre arranca "limpia".
 - Si más adelante quieres actualizar la demo, basta con hacer `git push` de
   nuevo a la misma rama — Render vuelve a construir y desplegar solo.
-- Los cuatro usuarios de ejemplo son: **Ana Torres** (Director de TI),
-  **Carlos Mendoza** (Jefe de Producción), y **Laura Gómez** / **Julián
-  Rojas** (Usuario). Entrando como cada uno se puede ver todo el flujo:
-  crear una solicitud, aprobarla como jefe, aprobarla como Director de TI, y
-  el rechazo en cualquiera de los dos pasos.
+- Los usuarios de ejemplo son: **Rodrigo Rodriguez Vivas** (Director de TI),
+  **Juan Gabriel Silva** (Jefe de Producción), **Laura Gómez** / **Julián
+  Rojas** (Usuario), y **Guarda de Seguridad** (portería, cuenta genérica sin
+  nombre propio ya que los guardas rotan por turno). Entrando como cada uno
+  se puede ver todo el flujo: crear una solicitud, aprobarla como jefe,
+  aprobarla como Director de TI, el rechazo en cualquiera de los dos pasos,
+  y — para una solicitud ya aprobada — confirmar en "Salidas (portería)" que
+  el equipo salió físicamente de la empresa.

@@ -33,7 +33,7 @@ namespace PermisoSalidaEquipos.Web.Authorization
             }
 
             var usuario = await _currentUserService.ObtenerUsuarioActualAsync();
-            if (usuario != null && !usuario.PerfilCompleto(RoleNames.DirectorTI))
+            if (usuario != null && !usuario.PerfilCompleto())
             {
                 context.Result = new Microsoft.AspNetCore.Mvc.RedirectToActionResult("Completar", "Perfil", null);
                 return;

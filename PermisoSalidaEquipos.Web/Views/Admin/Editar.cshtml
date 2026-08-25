@@ -28,7 +28,7 @@
             <div class="mb-3">
                 <label asp-for="JefeInmediatoId" class="form-label"></label>
                 <select asp-for="JefeInmediatoId" class="form-select">
-                    <option value="">-- Sin jefe inmediato (solo aplica a Director de TI) --</option>
+                    <option value="">-- Sin jefe inmediato (aplica a Director de TI y Guarda de Seguridad) --</option>
                     @foreach (var jefe in Model.JefesDisponibles)
                     {
                         <option value="@jefe.Id">@jefe.NombreCompleto @(jefe.Cargo != null ? $"({jefe.Cargo})" : "")</option>

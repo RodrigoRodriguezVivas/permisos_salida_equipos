@@ -6,6 +6,7 @@
     var rolActual = usuarioActual?.Rol?.Nombre;
     var esJefe = rolActual == RoleNames.JefeInmediato || rolActual == RoleNames.DirectorTI;
     var esDirector = rolActual == RoleNames.DirectorTI;
+    var esGuarda = rolActual == RoleNames.GuardaSeguridad || esDirector;
     var modoDemo = Configuration.GetValue<bool>("ModoDemo");
 }
 <!DOCTYPE html>
@@ -51,6 +52,15 @@
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-controller="Aprobaciones" asp-action="PendientesDirector">Aprobaciones (Director TI)</a>
                                 </li>
+                            }
+                            @if (esGuarda)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Guardia" asp-action="PendientesSalida">Salidas (portería)</a>
+                                </li>
+                            }
+                            @if (esDirector)
+                            {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-controller="Reportes" asp-action="Index">Reportes</a>
                                 </li>

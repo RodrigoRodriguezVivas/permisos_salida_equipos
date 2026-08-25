@@ -11,6 +11,22 @@ namespace PermisoSalidaEquipos.Web.Authorization
         public const string DirectorTI = "DirectorTI";
 
         /// <summary>
+        /// Guarda de seguridad de la portería: consulta las solicitudes ya aprobadas
+        /// que aún no han salido físicamente de la empresa y confirma la salida. No
+        /// se asigna a una persona en particular (los guardas rotan por turno):
+        /// basta con dejar su NombreCompleto como "Guarda de Seguridad".
+        /// </summary>
+        public const string GuardaSeguridad = "GuardaSeguridad";
+
+        /// <summary>
+        /// Roles que no necesitan un jefe inmediato asignado para completar su
+        /// perfil: el Director de TI (tope de la jerarquía) y el Guarda de
+        /// Seguridad (cuenta operativa compartida, sin línea de reporte propia en
+        /// este flujo).
+        /// </summary>
+        public static bool ExentoDeJefeInmediato(string? rol) => rol == DirectorTI || rol == GuardaSeguridad;
+
+        /// <summary>
         /// Nombre del rol tal como se le muestra a las personas (con espacios y
         /// tildes), a diferencia del valor guardado en la base de datos, que debe
         /// quedar sin espacios para poder compararse de forma exacta en el código.
@@ -20,6 +36,7 @@ namespace PermisoSalidaEquipos.Web.Authorization
             Usuario => "Usuario",
             JefeInmediato => "Jefe Inmediato",
             DirectorTI => "Director de TI",
+            GuardaSeguridad => "Guarda de Seguridad",
             _ => rol ?? string.Empty
         };
     }
@@ -29,5 +46,6 @@ namespace PermisoSalidaEquipos.Web.Authorization
     {
         public const string RequiereJefeInmediato = "RequiereJefeInmediato";
         public const string RequiereDirectorTI = "RequiereDirectorTI";
+        public const string RequiereGuardaSeguridad = "RequiereGuardaSeguridad";
     }
 }

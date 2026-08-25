@@ -43,7 +43,8 @@ namespace PermisoSalidaEquipos.Web.Controllers
                 "Id", "Solicitante", "Cédula", "Cargo", "Tipo de equipo", "Marca", "Modelo", "Serie",
                 "Motivo", "Fecha de salida", "Fecha retorno estimada", "Estado", "Fecha de creación",
                 "Jefe inmediato", "Fecha decisión jefe", "Comentario jefe",
-                "Director TI", "Fecha decisión director", "Comentario director"
+                "Director TI", "Fecha decisión director", "Comentario director",
+                "Salida confirmada por (portería)", "Fecha salida confirmada", "Observaciones portería"
             };
             for (var i = 0; i < encabezados.Length; i++)
             {
@@ -73,6 +74,9 @@ namespace PermisoSalidaEquipos.Web.Controllers
                 hoja.Cell(fila, 17).Value = s.DirectorTIRevisor?.NombreCompleto;
                 hoja.Cell(fila, 18).Value = s.FechaDecisionDirectorTI;
                 hoja.Cell(fila, 19).Value = s.ComentarioDirectorTI;
+                hoja.Cell(fila, 20).Value = s.RegistradaSalidaPor?.NombreCompleto;
+                hoja.Cell(fila, 21).Value = s.FechaSalidaRegistrada;
+                hoja.Cell(fila, 22).Value = s.ComentarioGuarda;
                 fila++;
             }
 
@@ -108,6 +112,7 @@ namespace PermisoSalidaEquipos.Web.Controllers
                     .Include(s => s.Solicitante)
                     .Include(s => s.JefeInmediatoAsignado)
                     .Include(s => s.DirectorTIRevisor)
+                    .Include(s => s.RegistradaSalidaPor)
                     .AsQueryable(),
                 filtro)
                 .OrderByDescending(s => s.FechaCreacion);

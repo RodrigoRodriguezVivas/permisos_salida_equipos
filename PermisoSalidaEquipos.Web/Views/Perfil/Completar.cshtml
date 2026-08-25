@@ -15,7 +15,7 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="UsuarioId" />
             <input type="hidden" asp-for="NombreUsuarioDominio" />
-            <input type="hidden" asp-for="EsDirectorTI" />
+            <input type="hidden" asp-for="ExentoDeJefeInmediato" />
 
             <div class="mb-3">
                 <label asp-for="NombreCompleto" class="form-label"></label>
@@ -41,7 +41,7 @@
                 <span asp-validation-for="Cargo" class="text-danger"></span>
             </div>
 
-            @if (!Model.EsDirectorTI)
+            @if (!Model.ExentoDeJefeInmediato)
             {
                 <div class="mb-3">
                     <label asp-for="JefeInmediatoId" class="form-label"></label>
@@ -57,7 +57,7 @@
             }
             else
             {
-                <p class="text-muted">Como Director de TI, tus propias solicitudes van directamente a aprobación final, sin jefe inmediato.</p>
+                <p class="text-muted">Tus propias solicitudes van directamente a aprobación final, sin pasar por un jefe inmediato.</p>
             }
 
             <button type="submit" class="btn btn-primary">Guardar y continuar</button>

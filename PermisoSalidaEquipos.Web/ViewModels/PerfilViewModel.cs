@@ -29,7 +29,12 @@ namespace PermisoSalidaEquipos.Web.ViewModels
         [Display(Name = "Jefe inmediato")]
         public int? JefeInmediatoId { get; set; }
 
-        public bool EsDirectorTI { get; set; }
+        /// <summary>
+        /// true para los roles exentos de tener jefe inmediato (Director de TI y
+        /// Guarda de Seguridad): en ese caso la pantalla ni siquiera muestra el
+        /// selector de jefe inmediato.
+        /// </summary>
+        public bool ExentoDeJefeInmediato { get; set; }
 
         public List<UsuarioOpcionViewModel> JefesDisponibles { get; set; } = new();
     }
