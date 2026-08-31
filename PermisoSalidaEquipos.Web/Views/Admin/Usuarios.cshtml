@@ -57,8 +57,14 @@
     if (!Model.ActiveDirectoryDisponible)
     {
         <div class="alert alert-warning">
-            No se pudo consultar Active Directory en este momento. Intenta de nuevo más tarde,
-            o agrega a la persona manualmente pidiéndole que inicie sesión una vez.
+            <p class="mb-1">
+                No se pudo consultar Active Directory en este momento. Intenta de nuevo más tarde,
+                o agrega a la persona manualmente pidiéndole que inicie sesión una vez.
+            </p>
+            @if (!string.IsNullOrWhiteSpace(Model.ActiveDirectoryError))
+            {
+                <p class="mb-0 small text-muted">Detalle técnico: <code>@Model.ActiveDirectoryError</code></p>
+            }
         </div>
     }
     else if (Model.ResultadosAD == null || !Model.ResultadosAD.Any())

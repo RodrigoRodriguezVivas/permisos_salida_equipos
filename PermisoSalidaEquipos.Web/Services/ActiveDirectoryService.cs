@@ -91,12 +91,16 @@ namespace PermisoSalidaEquipos.Web.Services
 
         private const int MaximoResultadosBusqueda = 20;
 
-        public Task<List<CandidatoActiveDirectory>?> BuscarUsuariosAsync(string filtro)
+        public Task<ResultadoBusquedaActiveDirectory> BuscarUsuariosAsync(string filtro)
         {
             if (_configuration.GetValue<bool>("ModoDemo"))
             {
                 // Sitio de demostración pública: no hay Active Directory real que consultar.
-                return Task.FromResult<List<CandidatoActiveDirectory>?>(null);
+                return Task.FromResult(new ResultadoBusquedaActiveDirectory
+                {
+                    Candidatos = null,
+                    Error = "La aplicación está corriendo en modo de demostración (ModoDemo=true); no hay conexión real a Active Directory."
+                });
             }
 
             filtro = (filtro ?? string.Empty).Trim();
@@ -104,7 +108,7 @@ namespace PermisoSalidaEquipos.Web.Services
             {
                 // Evita consultas demasiado amplias (o costosas) sobre todo el directorio;
                 // la pantalla le pide a la persona que escriba al menos dos caracteres.
-                return Task.FromResult<List<CandidatoActiveDirectory>?>(new List<CandidatoActiveDirectory>());
+                return Task.FromResult(new ResultadoBusquedaActiveDirectory { Candidatos = new List<CandidatoActiveDirectory>() });
             }
 
             try
@@ -133,13 +137,35 @@ namespace PermisoSalidaEquipos.Web.Services
                     .Take(MaximoResultadosBusqueda)
                     .ToList();
 
-                return Task.FromResult<List<CandidatoActiveDirectory>?>(resultado);
+                return Task.FromResult(new ResultadoBusquedaActiveDirectory { Candidatos = resultado });
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "No se pudo buscar en Active Directory con el filtro '{Filtro}'.", filtro);
-                return Task.FromResult<List<CandidatoActiveDirectory>?>(null);
+                return Task.FromResult(new ResultadoBusquedaActiveDirectory
+                {
+                    Candidatos = null,
+                    Error = DescribirError(ex)
+                });
             }
+        }
+
+        /// <summary>
+        /// Mensaje técnico corto (tipo + mensaje de la excepción más interna) para
+        /// mostrarle al Director de TI en la propia pantalla de Administración y así
+        /// poder diagnosticar problemas típicos de esta integración (servidor de
+        /// dominio inalcanzable, credenciales/permisos insuficientes, DNS, etc.) sin
+        /// depender de revisar los logs del servidor IIS.
+        /// </summary>
+        private static string DescribirError(Exception ex)
+        {
+            var interna = ex;
+            while (interna.InnerException != null)
+            {
+                interna = interna.InnerException;
+            }
+
+            return $"{interna.GetType().Name}: {interna.Message}";
         }
 
         private void BuscarPorCampo(PrincipalContext contexto, string prefijoDominio, Dictionary<string, CandidatoActiveDirectory> encontrados, string filtro, bool porNombre)

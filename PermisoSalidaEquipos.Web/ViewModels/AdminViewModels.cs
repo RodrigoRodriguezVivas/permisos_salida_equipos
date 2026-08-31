@@ -42,6 +42,9 @@ namespace PermisoSalidaEquipos.Web.ViewModels
         /// "no hay resultados".
         /// </summary>
         public bool ActiveDirectoryDisponible { get; set; } = true;
+
+        /// <summary>Detalle técnico del fallo, para diagnosticar sin revisar logs del servidor.</summary>
+        public string? ActiveDirectoryError { get; set; }
     }
 
     public class EditarUsuarioAdminViewModel

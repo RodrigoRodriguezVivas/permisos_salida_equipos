@@ -36,10 +36,11 @@ namespace PermisoSalidaEquipos.Web.Controllers
 
             if (!string.IsNullOrWhiteSpace(busqueda))
             {
-                var candidatos = await _activeDirectoryService.BuscarUsuariosAsync(busqueda);
-                if (candidatos == null)
+                var resultadoBusqueda = await _activeDirectoryService.BuscarUsuariosAsync(busqueda);
+                if (resultadoBusqueda.Candidatos == null)
                 {
                     modelo.ActiveDirectoryDisponible = false;
+                    modelo.ActiveDirectoryError = resultadoBusqueda.Error;
                 }
                 else
                 {
@@ -47,7 +48,7 @@ namespace PermisoSalidaEquipos.Web.Controllers
                         modelo.Usuarios.Select(u => u.NombreUsuarioDominio),
                         System.StringComparer.OrdinalIgnoreCase);
 
-                    modelo.ResultadosAD = candidatos
+                    modelo.ResultadosAD = resultadoBusqueda.Candidatos
                         .Where(c => !yaRegistrados.Contains(c.NombreUsuarioDominio))
                         .ToList();
                 }
