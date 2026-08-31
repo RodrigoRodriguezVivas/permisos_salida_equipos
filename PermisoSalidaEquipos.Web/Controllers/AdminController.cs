@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PermisoSalidaEquipos.Web.Authorization;
 using PermisoSalidaEquipos.Web.Data;
+using PermisoSalidaEquipos.Web.Services;
 using PermisoSalidaEquipos.Web.ViewModels;
 
 namespace PermisoSalidaEquipos.Web.Controllers
@@ -17,15 +18,91 @@ namespace PermisoSalidaEquipos.Web.Controllers
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly IActiveDirectoryService _activeDirectoryService;
 
-        public AdminController(ApplicationDbContext db)
+        public AdminController(ApplicationDbContext db, IActiveDirectoryService activeDirectoryService)
         {
             _db = db;
+            _activeDirectoryService = activeDirectoryService;
         }
 
-        public async Task<IActionResult> Usuarios()
+        public async Task<IActionResult> Usuarios(string? busqueda)
         {
-            var usuarios = await _db.Usuarios
+            var modelo = new UsuariosAdminViewModel
+            {
+                Usuarios = await ObtenerUsuariosAsync(),
+                Busqueda = busqueda
+            };
+
+            if (!string.IsNullOrWhiteSpace(busqueda))
+            {
+                var candidatos = await _activeDirectoryService.BuscarUsuariosAsync(busqueda);
+                if (candidatos == null)
+                {
+                    modelo.ActiveDirectoryDisponible = false;
+                }
+                else
+                {
+                    var yaRegistrados = new System.Collections.Generic.HashSet<string>(
+                        modelo.Usuarios.Select(u => u.NombreUsuarioDominio),
+                        System.StringComparer.OrdinalIgnoreCase);
+
+                    modelo.ResultadosAD = candidatos
+                        .Where(c => !yaRegistrados.Contains(c.NombreUsuarioDominio))
+                        .ToList();
+                }
+            }
+
+            return View(modelo);
+        }
+
+        /// <summary>
+        /// Crea el registro de un usuario a partir de una cuenta de Active Directory
+        /// encontrada en la búsqueda, sin esperar a que esa persona inicie sesión.
+        /// Queda con el rol "Usuario" por defecto; de inmediato se redirige a
+        /// "Editar" para que el Director de TI le asigne el rol y el jefe inmediato
+        /// reales.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AgregarDesdeAD(string nombreUsuarioDominio, string? busqueda)
+        {
+            if (string.IsNullOrWhiteSpace(nombreUsuarioDominio))
+            {
+                return RedirectToAction(nameof(Usuarios), new { busqueda });
+            }
+
+            var existente = await _db.Usuarios.FirstOrDefaultAsync(u => u.NombreUsuarioDominio == nombreUsuarioDominio);
+            if (existente != null)
+            {
+                TempData["Mensaje"] = $"{existente.NombreCompleto} ya estaba en el sistema.";
+                return RedirectToAction(nameof(Editar), new { id = existente.Id });
+            }
+
+            var datosAd = await _activeDirectoryService.ObtenerDatosAsync(nombreUsuarioDominio);
+            var rolUsuario = await _db.Roles.FirstAsync(r => r.Nombre == RoleNames.Usuario);
+
+            var usuario = new Models.Usuario
+            {
+                NombreUsuarioDominio = nombreUsuarioDominio,
+                NombreCompleto = datosAd?.NombreCompleto ?? nombreUsuarioDominio,
+                Correo = datosAd?.Correo ?? string.Empty,
+                Cargo = datosAd?.Cargo,
+                RolId = rolUsuario.Id,
+                Activo = true,
+                FechaCreacion = System.DateTime.Now
+            };
+
+            _db.Usuarios.Add(usuario);
+            await _db.SaveChangesAsync();
+
+            TempData["Mensaje"] = $"Se agregó a {usuario.NombreCompleto} desde Active Directory. Asígnale su rol y jefe inmediato.";
+            return RedirectToAction(nameof(Editar), new { id = usuario.Id });
+        }
+
+        private async Task<System.Collections.Generic.List<UsuarioAdminListItemViewModel>> ObtenerUsuariosAsync()
+        {
+            return await _db.Usuarios
                 .Include(u => u.Rol)
                 .Include(u => u.JefeInmediato)
                 .OrderBy(u => u.NombreCompleto)
@@ -40,8 +117,6 @@ namespace PermisoSalidaEquipos.Web.Controllers
                     Activo = u.Activo
                 })
                 .ToListAsync();
-
-            return View(usuarios);
         }
 
         public async Task<IActionResult> Editar(int id)

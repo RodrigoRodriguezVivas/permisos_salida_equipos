@@ -51,7 +51,10 @@ Aligraf.
 Los cuatro roles de la aplicación (Usuario, JefeInmediato, DirectorTI,
 GuardaSeguridad) son independientes de los grupos de Windows: se administran
 desde la propia aplicación, en Administración > Usuarios, exclusivo del
-Director de TI.
+Director de TI. Esa pantalla incluye un buscador contra Active Directory: el
+Director de TI puede encontrar a cualquier persona del directorio de Aligraf
+por nombre o usuario de dominio y agregarla con su rol de una vez, sin
+esperar a que esa persona inicie sesión por primera vez.
 
 ## 3. Requisitos en el servidor (IIS de Aligraf)
 

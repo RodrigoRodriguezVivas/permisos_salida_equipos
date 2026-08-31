@@ -1,10 +1,10 @@
-@model List<UsuarioAdminListItemViewModel>
+@model UsuariosAdminViewModel
 @{
     ViewData["Title"] = "Administración de usuarios";
 }
 
 <h1>Usuarios y roles</h1>
-<p class="text-muted">Asigna el rol de cada persona (Usuario, Jefe Inmediato o Director de TI) y su jefe inmediato.</p>
+<p class="text-muted">Asigna el rol de cada persona (Usuario, Jefe Inmediato, Director de TI o Guarda de Seguridad) y su jefe inmediato.</p>
 
 <table class="table table-striped mt-3">
     <thead>
@@ -19,7 +19,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var u in Model)
+        @foreach (var u in Model.Usuarios)
         {
             <tr>
                 <td>@u.NombreUsuarioDominio</td>
@@ -33,3 +33,68 @@
         }
     </tbody>
 </table>
+
+<hr class="my-4" />
+
+<h2 class="h4">Agregar a alguien desde Active Directory</h2>
+<p class="text-muted">
+    Busca a una persona por nombre o usuario de dominio para agregarla y asignarle su rol
+    antes de que inicie sesión por primera vez. Solo aparecen cuentas habilitadas que
+    todavía no están en la tabla de arriba.
+</p>
+
+<form asp-controller="Admin" asp-action="Usuarios" method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Nombre o usuario de dominio (mínimo 2 letras)" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary">Buscar en Active Directory</button>
+    </div>
+</form>
+
+@if (!string.IsNullOrWhiteSpace(Model.Busqueda))
+{
+    if (!Model.ActiveDirectoryDisponible)
+    {
+        <div class="alert alert-warning">
+            No se pudo consultar Active Directory en este momento. Intenta de nuevo más tarde,
+            o agrega a la persona manualmente pidiéndole que inicie sesión una vez.
+        </div>
+    }
+    else if (Model.ResultadosAD == null || !Model.ResultadosAD.Any())
+    {
+        <p class="text-muted">No se encontraron cuentas habilitadas de Active Directory que coincidan con "@Model.Busqueda" (o ya están todas en la tabla de arriba).</p>
+    }
+    else
+    {
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Usuario de dominio</th>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Cargo</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model.ResultadosAD)
+                {
+                    <tr>
+                        <td>@c.NombreUsuarioDominio</td>
+                        <td>@c.NombreCompleto</td>
+                        <td>@c.Correo</td>
+                        <td>@c.Cargo</td>
+                        <td>
+                            <form asp-controller="Admin" asp-action="AgregarDesdeAD" method="post" class="d-inline">
+                                <input type="hidden" name="nombreUsuarioDominio" value="@c.NombreUsuarioDominio" />
+                                <input type="hidden" name="busqueda" value="@Model.Busqueda" />
+                                <button type="submit" class="btn btn-sm btn-success">Agregar</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}

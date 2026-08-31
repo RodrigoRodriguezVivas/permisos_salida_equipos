@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -85,6 +87,130 @@ namespace PermisoSalidaEquipos.Web.Services
                 _logger.LogWarning(ex, "No se pudo consultar Active Directory para '{Usuario}'.", nombreUsuarioDominio);
                 return Task.FromResult<DatosActiveDirectory?>(null);
             }
+        }
+
+        private const int MaximoResultadosBusqueda = 20;
+
+        public Task<List<CandidatoActiveDirectory>?> BuscarUsuariosAsync(string filtro)
+        {
+            if (_configuration.GetValue<bool>("ModoDemo"))
+            {
+                // Sitio de demostración pública: no hay Active Directory real que consultar.
+                return Task.FromResult<List<CandidatoActiveDirectory>?>(null);
+            }
+
+            filtro = (filtro ?? string.Empty).Trim();
+            if (filtro.Length < 2)
+            {
+                // Evita consultas demasiado amplias (o costosas) sobre todo el directorio;
+                // la pantalla le pide a la persona que escriba al menos dos caracteres.
+                return Task.FromResult<List<CandidatoActiveDirectory>?>(new List<CandidatoActiveDirectory>());
+            }
+
+            try
+            {
+                var dominio = _configuration["ActiveDirectory:Dominio"];
+                var usuarioServicio = _configuration["ActiveDirectory:Usuario"];
+                var claveServicio = _configuration["ActiveDirectory:Clave"];
+                var prefijoDominio = ResolverPrefijoDominio();
+
+                using var contexto = CrearContexto(dominio, usuarioServicio, claveServicio);
+
+                var encontrados = new Dictionary<string, CandidatoActiveDirectory>(StringComparer.OrdinalIgnoreCase);
+
+                // Dos búsquedas por separado (nombre para mostrar y usuario de dominio):
+                // Query By Example de UserPrincipal no hace "contiene" sobre varios
+                // campos a la vez, así que se combinan los resultados de ambas,
+                // evitando duplicados por SamAccountName.
+                BuscarPorCampo(contexto, prefijoDominio, encontrados, filtro, porNombre: true);
+                if (encontrados.Count < MaximoResultadosBusqueda)
+                {
+                    BuscarPorCampo(contexto, prefijoDominio, encontrados, filtro, porNombre: false);
+                }
+
+                var resultado = encontrados.Values
+                    .OrderBy(c => c.NombreCompleto ?? c.NombreUsuarioDominio)
+                    .Take(MaximoResultadosBusqueda)
+                    .ToList();
+
+                return Task.FromResult<List<CandidatoActiveDirectory>?>(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo buscar en Active Directory con el filtro '{Filtro}'.", filtro);
+                return Task.FromResult<List<CandidatoActiveDirectory>?>(null);
+            }
+        }
+
+        private void BuscarPorCampo(PrincipalContext contexto, string prefijoDominio, Dictionary<string, CandidatoActiveDirectory> encontrados, string filtro, bool porNombre)
+        {
+            using var qbeUsuario = new UserPrincipal(contexto) { Enabled = true };
+            if (porNombre)
+            {
+                qbeUsuario.DisplayName = $"*{filtro}*";
+            }
+            else
+            {
+                qbeUsuario.SamAccountName = $"*{filtro}*";
+            }
+
+            using var buscador = new PrincipalSearcher(qbeUsuario);
+            using var resultados = buscador.FindAll();
+
+            foreach (var principal in resultados)
+            {
+                using (principal)
+                {
+                    if (principal is not UserPrincipal usuarioAd || string.IsNullOrWhiteSpace(usuarioAd.SamAccountName))
+                    {
+                        continue;
+                    }
+
+                    if (encontrados.Count >= MaximoResultadosBusqueda)
+                    {
+                        break;
+                    }
+
+                    var nombreUsuarioDominio = $"{prefijoDominio}\\{usuarioAd.SamAccountName}";
+                    if (encontrados.ContainsKey(nombreUsuarioDominio))
+                    {
+                        continue;
+                    }
+
+                    encontrados[nombreUsuarioDominio] = new CandidatoActiveDirectory
+                    {
+                        NombreUsuarioDominio = nombreUsuarioDominio,
+                        NombreCompleto = CadenaONulo(usuarioAd.DisplayName),
+                        Correo = CadenaONulo(usuarioAd.EmailAddress),
+                        Cargo = CadenaONulo(LeerCargo(usuarioAd))
+                    };
+                }
+            }
+        }
+
+        /// <summary>
+        /// El nombre de usuario de dominio se guarda en la aplicación en formato
+        /// DOMINIO\usuario (el mismo que entrega la autenticación integrada de
+        /// Windows), pero Active Directory identifica el dominio por su nombre DNS,
+        /// no por el nombre NetBIOS que aparece antes de la barra invertida. Por eso
+        /// hace falta resolverlo aparte para que el registro creado aquí coincida
+        /// exactamente con el que se buscaría en el primer inicio de sesión real de
+        /// esa persona (si no coinciden, se crearía un segundo registro duplicado en
+        /// vez de reconocerla). Orden de resolución:
+        ///   1. ActiveDirectory:PrefijoDominioNetBIOS en appsettings, si se diligenció.
+        ///   2. El dominio de Windows del propio servidor (Environment.UserDomainName),
+        ///      que es el valor correcto en el caso normal: IIS corriendo en un
+        ///      servidor unido al dominio de Aligraf.
+        /// </summary>
+        private string ResolverPrefijoDominio()
+        {
+            var configurado = _configuration["ActiveDirectory:PrefijoDominioNetBIOS"];
+            if (!string.IsNullOrWhiteSpace(configurado))
+            {
+                return configurado.Trim();
+            }
+
+            return Environment.UserDomainName;
         }
 
         private static PrincipalContext CrearContexto(string? dominio, string? usuarioServicio, string? claveServicio)

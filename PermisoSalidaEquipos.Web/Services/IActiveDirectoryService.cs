@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PermisoSalidaEquipos.Web.Services
@@ -9,6 +10,25 @@ namespace PermisoSalidaEquipos.Web.Services
     /// </summary>
     public class DatosActiveDirectory
     {
+        public string? NombreCompleto { get; set; }
+        public string? Correo { get; set; }
+        public string? Cargo { get; set; }
+    }
+
+    /// <summary>
+    /// Una cuenta de Active Directory encontrada al buscar por nombre, para que el
+    /// Director de TI la agregue a "Usuarios y roles" sin esperar a que esa persona
+    /// inicie sesión por primera vez.
+    /// </summary>
+    public class CandidatoActiveDirectory
+    {
+        /// <summary>
+        /// En formato DOMINIO\usuario, igual al que entrega la autenticación
+        /// integrada de Windows — así el registro que se cree aquí coincide
+        /// exactamente con el que se buscaría en el primer inicio de sesión real de
+        /// esa persona, en vez de crear un duplicado.
+        /// </summary>
+        public string NombreUsuarioDominio { get; set; } = string.Empty;
         public string? NombreCompleto { get; set; }
         public string? Correo { get; set; }
         public string? Cargo { get; set; }
@@ -29,5 +49,16 @@ namespace PermisoSalidaEquipos.Web.Services
         /// — nunca lanza una excepción que interrumpa el inicio de sesión.
         /// </summary>
         Task<DatosActiveDirectory?> ObtenerDatosAsync(string nombreUsuarioDominio);
+
+        /// <summary>
+        /// Busca cuentas habilitadas en Active Directory cuyo nombre o usuario de
+        /// dominio contenga <paramref name="filtro"/> (usado en Administración >
+        /// Usuarios y roles, para agregar a alguien antes de su primer ingreso).
+        /// Devuelve como máximo 20 resultados. Devuelve null (en vez de una lista
+        /// vacía) si la aplicación corre en modo demo o si Active Directory no está
+        /// disponible por cualquier motivo, para que la pantalla pueda distinguir
+        /// "no hay resultados" de "no se pudo consultar Active Directory".
+        /// </summary>
+        Task<List<CandidatoActiveDirectory>?> BuscarUsuariosAsync(string filtro);
     }
 }
