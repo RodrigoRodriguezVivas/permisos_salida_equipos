@@ -11,6 +11,10 @@
     <!-- Autenticación integrada de Windows (SSO) contra Active Directory vía IIS. -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.10" />
 
+    <!-- Consulta a Active Directory (LDAP) para autocompletar nombre, correo y cargo. -->
+    <PackageReference Include="System.DirectoryServices" Version="8.0.0" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="8.0.1" />
+
     <!-- Acceso a SQL Server (producción) y SQLite (sitio de demostración pública). -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.10" />

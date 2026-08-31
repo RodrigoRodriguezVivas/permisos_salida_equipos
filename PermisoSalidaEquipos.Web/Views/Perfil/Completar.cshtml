@@ -9,6 +9,13 @@
     Tu usuario de dominio es <strong>@Model.NombreUsuarioDominio</strong>.
 </p>
 
+<form asp-controller="Perfil" asp-action="RefrescarDesdeAD" method="post" class="mb-3">
+    <button type="submit" class="btn btn-outline-secondary btn-sm">
+        Traer mis datos desde Active Directory
+    </button>
+    <span class="text-muted small ms-2">Completa nombre, correo y cargo automáticamente si Active Directory los tiene.</span>
+</form>
+
 <div class="row">
     <div class="col-md-6">
         <form asp-controller="Perfil" asp-action="Completar" method="post">

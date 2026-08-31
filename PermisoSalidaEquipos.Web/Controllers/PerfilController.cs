@@ -15,11 +15,13 @@ namespace PermisoSalidaEquipos.Web.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IActiveDirectoryService _activeDirectoryService;
 
-        public PerfilController(ApplicationDbContext db, ICurrentUserService currentUserService)
+        public PerfilController(ApplicationDbContext db, ICurrentUserService currentUserService, IActiveDirectoryService activeDirectoryService)
         {
             _db = db;
             _currentUserService = currentUserService;
+            _activeDirectoryService = activeDirectoryService;
         }
 
         public async Task<IActionResult> Completar()
@@ -87,6 +89,40 @@ namespace PermisoSalidaEquipos.Web.Controllers
 
             TempData["Mensaje"] = "Tu perfil se guardó correctamente.";
             return RedirectToAction("Index", "Home");
+        }
+
+        /// <summary>
+        /// Vuelve a consultar Active Directory y actualiza nombre completo, correo y
+        /// cargo con lo que encuentre allí (solo los campos que AD devuelva con
+        /// valor; nunca borra un dato ya diligenciado si AD no lo tiene). Útil cuando
+        /// la primera consulta automática del login falló, o cuando esos datos
+        /// cambiaron en Active Directory (ej. un ascenso).
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RefrescarDesdeAD()
+        {
+            var usuario = await _currentUserService.ObtenerUsuarioActualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var datosAd = await _activeDirectoryService.ObtenerDatosAsync(usuario.NombreUsuarioDominio);
+            if (datosAd == null)
+            {
+                TempData["Mensaje"] = "No se pudo consultar Active Directory en este momento. Puedes diligenciar los datos manualmente.";
+                return RedirectToAction(nameof(Completar));
+            }
+
+            if (!string.IsNullOrWhiteSpace(datosAd.NombreCompleto)) usuario.NombreCompleto = datosAd.NombreCompleto;
+            if (!string.IsNullOrWhiteSpace(datosAd.Correo)) usuario.Correo = datosAd.Correo;
+            if (!string.IsNullOrWhiteSpace(datosAd.Cargo)) usuario.Cargo = datosAd.Cargo;
+
+            await _db.SaveChangesAsync();
+
+            TempData["Mensaje"] = "Datos actualizados desde Active Directory.";
+            return RedirectToAction(nameof(Completar));
         }
 
         private async Task<System.Collections.Generic.List<UsuarioOpcionViewModel>> ObtenerJefesDisponiblesAsync(int usuarioActualId)

@@ -12,13 +12,15 @@ namespace PermisoSalidaEquipos.Web.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ApplicationDbContext _db;
+        private readonly IActiveDirectoryService _activeDirectoryService;
         private Usuario? _cache;
         private bool _resuelto;
 
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor, ApplicationDbContext db)
+        public CurrentUserService(IHttpContextAccessor httpContextAccessor, ApplicationDbContext db, IActiveDirectoryService activeDirectoryService)
         {
             _httpContextAccessor = httpContextAccessor;
             _db = db;
+            _activeDirectoryService = activeDirectoryService;
         }
 
         public async Task<Usuario?> ObtenerUsuarioActualAsync()
@@ -47,14 +49,19 @@ namespace PermisoSalidaEquipos.Web.Services
             {
                 var rolUsuario = await _db.Roles.FirstAsync(r => r.Nombre == RoleNames.Usuario);
 
+                // Se intenta traer nombre completo, correo y cargo reales desde Active
+                // Directory para no obligar a la persona a digitarlos a mano. Si AD no
+                // está disponible (modo demo, entorno de desarrollo, falla de red/
+                // permisos) datosAd queda en null y se usa el valor provisional de
+                // siempre; la persona corrige lo que falte en "Completar perfil".
+                var datosAd = await _activeDirectoryService.ObtenerDatosAsync(identityName);
+
                 usuario = new Usuario
                 {
                     NombreUsuarioDominio = identityName,
-                    // Nombre para mostrar provisional: la parte después de la barra
-                    // invertida del nombre de dominio. El usuario lo puede corregir en
-                    // "Completar perfil".
-                    NombreCompleto = ExtraerNombreParaMostrar(identityName),
-                    Correo = string.Empty,
+                    NombreCompleto = datosAd?.NombreCompleto ?? ExtraerNombreParaMostrar(identityName),
+                    Correo = datosAd?.Correo ?? string.Empty,
+                    Cargo = datosAd?.Cargo,
                     RolId = rolUsuario.Id,
                     Activo = true,
                     FechaCreacion = DateTime.Now

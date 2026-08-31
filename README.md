@@ -3,9 +3,10 @@
 Aplicación web para gestionar el permiso de salida de equipos de cómputo, con
 flujo de aprobación en dos pasos (jefe inmediato → Director de TI) más
 confirmación física de salida en portería (Guarda de Seguridad), ingreso
-automático con la cuenta de dominio (Windows/Active Directory) y datos
-almacenados en SQL Server. Construida en ASP.NET Core 8 MVC para hospedarse
-en el IIS de Aligraf.
+automático con la cuenta de dominio (Windows/Active Directory, con nombre,
+correo y cargo autocompletados desde el directorio) y datos almacenados en
+SQL Server. Construida en ASP.NET Core 8 MVC para hospedarse en el IIS de
+Aligraf.
 
 ## 1. Qué incluye
 
@@ -19,9 +20,14 @@ en el IIS de Aligraf.
 
 ## 2. Cómo funciona el flujo
 
-1. **Usuario**: inicia sesión (automáticamente, con su cuenta de Windows), y
-   la primera vez completa su perfil (cédula, cargo y jefe inmediato). Desde
-   "Nueva solicitud" registra el permiso de salida del equipo.
+1. **Usuario**: inicia sesión (automáticamente, con su cuenta de Windows). En
+   el primer ingreso, la aplicación consulta Active Directory y autocompleta
+   nombre completo, correo y cargo (si AD no responde, o esos datos no están
+   diligenciados allí, la persona los completa a mano; siempre puede volver a
+   traerlos con el botón "Traer mis datos desde Active Directory"). Solo la
+   cédula y el jefe inmediato se piden siempre en "Completar perfil", porque
+   Active Directory no los tiene. Desde "Nueva solicitud" registra el permiso
+   de salida del equipo.
 2. **Jefe inmediato**: recibe un correo y ve la solicitud en "Aprobaciones
    (jefe inmediato)". Puede aprobar (pasa al Director de TI) o rechazar.
 3. **Director de TI**: recibe la solicitud aprobada por el jefe, la revisa en
@@ -66,6 +72,15 @@ Director de TI.
    de aplicación estándar del servidor; en caso de usar Kerberos en vez de
    NTLM, puede requerirse registrar un SPN — consúltalo con el equipo de
    infraestructura si el login no funciona).
+5. Esa misma cuenta del Application Pool necesita permiso de **lectura**
+   sobre el directorio (el mismo nivel que cualquier usuario autenticado del
+   dominio normalmente ya tiene) para que la aplicación pueda traer nombre
+   completo, correo y cargo de cada persona desde Active Directory. Si por
+   política de Aligraf se prefiere usar una cuenta de servicio dedicada en
+   vez de la identidad del Application Pool, diligénciala en
+   `ActiveDirectory:Usuario` / `ActiveDirectory:Clave` (ver sección 5). Si
+   esta consulta falla por cualquier motivo, la aplicación sigue funcionando
+   igual: la persona simplemente diligencia esos datos a mano.
 
 ## 4. Base de datos
 
@@ -102,6 +117,11 @@ contraseñas):
     "Clave": "",
     "CorreoRemitente": "no-responder@alianzagrafica.com",
     "UrlBaseAplicacion": "http://permisos.alianzagrafica.local"
+  },
+  "ActiveDirectory": {
+    "Dominio": "",
+    "Usuario": "",
+    "Clave": ""
   }
 }
 ```
@@ -109,6 +129,12 @@ contraseñas):
 Pide al equipo de infraestructura los datos reales del servidor SMTP interno
 y de la cadena de conexión de SQL Server. Si `Smtp:Habilitado` queda en
 `false`, la aplicación funciona igual pero no envía correos.
+
+`ActiveDirectory:Dominio/Usuario/Clave` normalmente se dejan **vacíos**: la
+aplicación consulta Active Directory con la identidad del Application Pool de
+IIS (ver sección 3, punto 5), que en la mayoría de los casos ya tiene permiso
+de lectura suficiente. Solo hace falta diligenciarlos si el equipo de
+infraestructura pide usar una cuenta de servicio dedicada para esa consulta.
 
 `Database:CrearEsquemaAutomaticamente` debe quedar en `false` en producción
 (el esquema ya lo crea `01_CreateDatabase.sql`); solo se deja en `true` en
@@ -118,7 +144,8 @@ y de la cadena de conexión de SQL Server. Si `Smtp:Habilitado` queda en
 
 Esto requiere una máquina con el **SDK de .NET 8** y acceso a NuGet (para
 restaurar `Microsoft.EntityFrameworkCore.SqlServer`,
-`Microsoft.AspNetCore.Authentication.Negotiate`, `MailKit` y `ClosedXML` la
+`Microsoft.AspNetCore.Authentication.Negotiate`,
+`System.DirectoryServices.AccountManagement`, `MailKit` y `ClosedXML` la
 primera vez) — puede ser tu equipo de desarrollo o un servidor de build; no
 hace falta que sea el servidor IIS final.
 
@@ -156,7 +183,7 @@ PermisoSalidaEquipos.Web/
   Controllers/       Home, Perfil, Solicitudes, Aprobaciones, Guardia, Admin, Reportes
   Data/               DbContext (EF Core) y siembra inicial de roles
   Models/             Entidades: Rol, Usuario, Solicitud, HistorialSolicitud, EstadoSolicitud
-  Services/           Resolución del usuario actual (Windows→BD), envío de correo, notificaciones
+  Services/           Resolución del usuario actual (Windows→BD), consulta a Active Directory, envío de correo, notificaciones
   ViewModels/         Modelos de las vistas (formularios, listados, filtros)
   Views/              Razor views (Bootstrap 5, incluido localmente en wwwroot/lib)
   Program.cs          Autenticación Windows (Negotiate/IIS), EF Core, políticas de autorización
