@@ -68,8 +68,11 @@ esperar a que esa persona inicie sesión por primera vez.
    <https://dotnet.microsoft.com/download/dotnet/8.0> → "Hosting Bundle".
    Después de instalarlo, ejecuta `net stop was /y` seguido de `net start w3svc`
    (o reinicia el servidor) para que IIS reconozca el módulo de ASP.NET Core.
-3. Acceso desde el servidor IIS al **SQL Server** donde vivirá la base de
-   datos `PermisoSalidaEquiposDb`.
+3. Acceso desde el servidor IIS al **SQL Server** de Aligraf, instancia
+   `SALAH\PRUEBAS`, donde vive la base de datos `Informes_Aligraf` que ya
+   usan los demás desarrollos propios de Aligraf — este proyecto se instala
+   ahí mismo (no crea una base de datos propia), con todas sus tablas
+   identificadas por el prefijo `PS_`.
 4. La cuenta bajo la que corre el Application Pool de IIS necesita permisos
    para autenticar contra Active Directory (normalmente basta con la cuenta
    de aplicación estándar del servidor; en caso de usar Kerberos en vez de
@@ -87,13 +90,26 @@ esperar a que esa persona inicie sesión por primera vez.
 
 ## 4. Base de datos
 
-1. En el SQL Server de Aligraf, ejecuta `database/01_CreateDatabase.sql`
-   (por ejemplo desde SQL Server Management Studio). Esto crea la base de
-   datos `PermisoSalidaEquiposDb`, las tablas y siembra los tres roles.
+Este proyecto **no** crea su propia base de datos: se instala dentro de
+`Informes_Aligraf` (instancia `SALAH\PRUEBAS`), la base de datos donde ya
+viven los demás desarrollos propios de Aligraf. Para que sus tablas nunca
+choquen con las de esos otros sistemas, **todas** las tablas, llaves e
+índices de este proyecto llevan el prefijo `PS_` (`PS_Roles`, `PS_Usuarios`,
+`PS_Solicitudes`, `PS_HistorialSolicitudes`, `PK_PS_...`, `FK_PS_...`,
+`IX_PS_...`) — están completamente aisladas del resto de tablas de esa base
+de datos.
+
+1. En el SQL Server de Aligraf (instancia `SALAH\PRUEBAS`), ejecuta
+   `database/01_CreateDatabase.sql` (por ejemplo desde SQL Server Management
+   Studio) **contra la base de datos `Informes_Aligraf` ya existente**. El
+   script hace `USE Informes_Aligraf` y solo crea las tablas `PS_*` — si esa
+   base de datos no existe en esa instancia, el script se detiene con un
+   error explícito en vez de crearla, porque está pensado para instalarse en
+   una base de datos que ya existe.
 2. (Opcional pero recomendado) Para poder entrar la primera vez y asignar
    los demás roles, deja algún usuario como Director de TI desde el
    principio. Hay dos formas — usa solo una:
-   - Descomenta y ajusta el bloque `INSERT INTO dbo.Usuarios` al final del
+   - Descomenta y ajusta el bloque `INSERT INTO dbo.PS_Usuarios` al final del
      script SQL con la cuenta de dominio real, **o**
    - Configura `AdministradorInicial:NombreUsuarioDominio` en
      `appsettings.json` (ver sección 5) con el formato `DOMINIO\usuario`
@@ -109,7 +125,7 @@ contraseñas):
 ```json
 {
   "ConnectionStrings": {
-    "PermisoSalidaEquiposDb": "Server=SERVIDOR_SQL\\INSTANCIA;Database=PermisoSalidaEquiposDb;Trusted_Connection=True;TrustServerCertificate=True;"
+    "PermisoSalidaEquiposDb": "Server=SALAH\\PRUEBAS;Database=Informes_Aligraf;Trusted_Connection=True;TrustServerCertificate=True;"
   },
   "Smtp": {
     "Habilitado": true,

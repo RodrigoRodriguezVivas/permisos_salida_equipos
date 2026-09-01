@@ -19,16 +19,20 @@ namespace PermisoSalidaEquipos.Web.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Prefijo "PS_" en todas las tablas: esta aplicación comparte la base de
+            // datos Informes_Aligraf con otros desarrollos propios de Aligraf, así
+            // que el prefijo evita choques de nombres con las tablas de esos otros
+            // sistemas.
             modelBuilder.Entity<Rol>(entity =>
             {
-                entity.ToTable("Roles");
+                entity.ToTable("PS_Roles");
                 entity.Property(r => r.Nombre).HasMaxLength(50).IsRequired();
                 entity.HasIndex(r => r.Nombre).IsUnique();
             });
 
             modelBuilder.Entity<Usuario>(entity =>
             {
-                entity.ToTable("Usuarios");
+                entity.ToTable("PS_Usuarios");
                 entity.Property(u => u.NombreUsuarioDominio).HasMaxLength(256).IsRequired();
                 entity.HasIndex(u => u.NombreUsuarioDominio).IsUnique();
                 entity.Property(u => u.NombreCompleto).HasMaxLength(200).IsRequired();
@@ -49,7 +53,7 @@ namespace PermisoSalidaEquipos.Web.Data
 
             modelBuilder.Entity<Solicitud>(entity =>
             {
-                entity.ToTable("Solicitudes");
+                entity.ToTable("PS_Solicitudes");
                 entity.Property(s => s.CedulaSolicitante).HasMaxLength(30).IsRequired();
                 entity.Property(s => s.CargoSolicitante).HasMaxLength(150).IsRequired();
                 entity.Property(s => s.TipoEquipo).HasMaxLength(100).IsRequired();
@@ -88,7 +92,7 @@ namespace PermisoSalidaEquipos.Web.Data
 
             modelBuilder.Entity<HistorialSolicitud>(entity =>
             {
-                entity.ToTable("HistorialSolicitudes");
+                entity.ToTable("PS_HistorialSolicitudes");
                 entity.Property(h => h.Estado).HasConversion<int>();
                 entity.Property(h => h.Comentario).HasMaxLength(500);
 
