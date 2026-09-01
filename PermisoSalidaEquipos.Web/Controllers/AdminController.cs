@@ -130,6 +130,9 @@ namespace PermisoSalidaEquipos.Web.Controllers
                 Id = usuario.Id,
                 NombreUsuarioDominio = usuario.NombreUsuarioDominio,
                 NombreCompleto = usuario.NombreCompleto,
+                Correo = usuario.Correo,
+                Cedula = usuario.Cedula,
+                Cargo = usuario.Cargo,
                 RolId = usuario.RolId,
                 JefeInmediatoId = usuario.JefeInmediatoId,
                 Activo = usuario.Activo,
@@ -155,12 +158,15 @@ namespace PermisoSalidaEquipos.Web.Controllers
             if (!ModelState.IsValid)
             {
                 modelo.NombreUsuarioDominio = usuario.NombreUsuarioDominio;
-                modelo.NombreCompleto = usuario.NombreCompleto;
                 modelo.RolesDisponibles = await ObtenerRolesAsync();
                 modelo.JefesDisponibles = await ObtenerJefesDisponiblesAsync(usuario.Id);
                 return View(modelo);
             }
 
+            usuario.NombreCompleto = modelo.NombreCompleto;
+            usuario.Correo = modelo.Correo ?? string.Empty;
+            usuario.Cedula = modelo.Cedula;
+            usuario.Cargo = modelo.Cargo;
             usuario.RolId = modelo.RolId;
             usuario.JefeInmediatoId = modelo.JefeInmediatoId;
             usuario.Activo = modelo.Activo;

@@ -50,8 +50,23 @@ namespace PermisoSalidaEquipos.Web.ViewModels
     public class EditarUsuarioAdminViewModel
     {
         public int Id { get; set; }
+
+        [Display(Name = "Usuario de dominio")]
         public string NombreUsuarioDominio { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El nombre completo es obligatorio.")]
+        [Display(Name = "Nombre completo")]
         public string NombreCompleto { get; set; } = string.Empty;
+
+        [EmailAddress(ErrorMessage = "Ingresa un correo válido.")]
+        [Display(Name = "Correo")]
+        public string? Correo { get; set; }
+
+        [Display(Name = "Cédula")]
+        public string? Cedula { get; set; }
+
+        [Display(Name = "Cargo")]
+        public string? Cargo { get; set; }
 
         [Required]
         [Display(Name = "Rol")]

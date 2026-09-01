@@ -12,7 +12,30 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="NombreUsuarioDominio" />
-            <input type="hidden" asp-for="NombreCompleto" />
+
+            <div class="mb-3">
+                <label asp-for="NombreCompleto" class="form-label"></label>
+                <input asp-for="NombreCompleto" class="form-control" />
+                <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Correo" class="form-label"></label>
+                <input asp-for="Correo" class="form-control" />
+                <span asp-validation-for="Correo" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Cedula" class="form-label"></label>
+                <input asp-for="Cedula" class="form-control" />
+                <span asp-validation-for="Cedula" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Cargo" class="form-label"></label>
+                <input asp-for="Cargo" class="form-control" />
+                <span asp-validation-for="Cargo" class="text-danger"></span>
+            </div>
 
             <div class="mb-3">
                 <label asp-for="RolId" class="form-label"></label>
