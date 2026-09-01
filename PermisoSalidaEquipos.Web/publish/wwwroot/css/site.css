@@ -1,22 +1,426 @@
+/* =====================================================================
+   PASE - Permisos de Salida de Equipos | Alianza Gráfica S.A.
+   Sistema de diseño: paleta tomada del logotipo (azul del isotipo/wordmark,
+   cian, dorado del degradado central) sobre una base neutra clara, para una
+   interfaz compacta, legible y de aspecto profesional.
+   ===================================================================== */
+
+:root {
+  /* --- Paleta de marca (extraída del logo Aligraf) --- */
+  --pase-navy: #0A2647;         /* azul oscuro - títulos, texto de énfasis */
+  --pase-navy-2: #123A6B;       /* azul oscuro secundario */
+  --pase-blue: #1467D6;         /* azul principal - botones, enlaces, foco de la marca */
+  --pase-blue-dark: #0B4EA8;    /* azul principal, estado hover/activo */
+  --pase-cyan: #00AEEF;         /* cian del logo - acentos, foco de campos, resaltados */
+  --pase-cyan-tint: #E7F8FD;    /* cian muy claro - fondos suaves, hover de filas */
+  --pase-gold: #C99A2E;         /* dorado del logo - reservado para "pendiente" */
+  --pase-magenta: #C21886;      /* magenta del logo - acento puntual, uso escaso */
+
+  /* --- Neutros --- */
+  --pase-bg: #F4F6F9;           /* fondo general de la página */
+  --pase-surface: #FFFFFF;      /* tarjetas, formularios, tablas */
+  --pase-border: #E3E8EF;
+  --pase-text: #1C2530;
+  --pase-text-muted: #64748B;
+
+  --pase-radius: .625rem;
+  --pase-radius-sm: .375rem;
+  --pase-shadow-sm: 0 1px 2px rgba(16, 24, 40, .05);
+  --pase-shadow-md: 0 4px 12px rgba(16, 24, 40, .08);
+}
+
+/* =====================================================================
+   Base — tipografía compacta y profesional
+   ===================================================================== */
+
 html {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 @media (min-width: 768px) {
   html {
-    font-size: 16px;
+    font-size: 15.5px;
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
+html,
+body {
   position: relative;
   min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+  margin-bottom: 0;
+  background-color: var(--pase-bg);
+  color: var(--pase-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--pase-navy);
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+h1 {
+  font-size: 1.55rem;
+  margin-bottom: .9rem;
+}
+
+h1.mb-3 { margin-bottom: .9rem !important; }
+
+h2, .h2 { font-size: 1.25rem; }
+h5, .h5, h5.mt-3 { font-size: 1rem; margin-top: 1.35rem !important; margin-bottom: .6rem; }
+
+a {
+  color: var(--pase-blue);
+}
+
+a:hover {
+  color: var(--pase-blue-dark);
+}
+
+.text-muted {
+  color: var(--pase-text-muted) !important;
+}
+
+code {
+  color: var(--pase-magenta);
+}
+
+hr {
+  border-color: var(--pase-border);
+  opacity: 1;
+}
+
+/* =====================================================================
+   Foco accesible (reemplaza el azul genérico por el cian de marca)
+   ===================================================================== */
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  box-shadow: 0 0 0 .1rem #fff, 0 0 0 .25rem rgba(0, 174, 239, .55);
+}
+
+/* =====================================================================
+   Barra de navegación
+   ===================================================================== */
+
+.pase-navbar {
+  background-color: var(--pase-surface);
+  border-bottom: 1px solid var(--pase-border);
+  box-shadow: var(--pase-shadow-sm);
+  padding-top: .55rem;
+  padding-bottom: .55rem;
+  margin-bottom: 1.5rem;
+}
+
+.pase-navbar .navbar-brand {
+  font-weight: 700;
+  color: var(--pase-navy);
+  font-size: 1.05rem;
+}
+
+.pase-navbar .navbar-brand img { display: block; }
+
+.pase-navbar .nav-link {
+  font-weight: 500;
+  font-size: .9rem;
+  color: var(--pase-text) !important;
+  padding: .5rem .75rem !important;
+  border-radius: var(--pase-radius-sm);
+  transition: background-color .15s ease, color .15s ease;
+}
+
+.pase-navbar .nav-link:hover {
+  color: var(--pase-blue) !important;
+  background-color: var(--pase-cyan-tint);
+}
+
+.pase-navbar .navbar-text {
+  font-size: .875rem;
+  color: var(--pase-text);
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.pase-demo-banner {
+  background-color: #FDF6E7;
+  color: #7A5A0B;
+  border-top: 1px solid #F1DFB0;
+  border-bottom: 1px solid #F1DFB0;
+  font-size: .85rem;
+  padding: .45rem 0;
+}
+
+.pase-footer {
+  position: static;
+  clear: both;
+  color: var(--pase-text-muted);
+  font-size: .8rem;
+  border-top: 1px solid var(--pase-border);
+  padding: 1.1rem 0;
+  margin-top: 3.5rem;
+}
+
+/* =====================================================================
+   Botones — compactos, con la paleta de marca
+   ===================================================================== */
+
+.btn {
+  font-size: .875rem;
+  font-weight: 600;
+  padding: .4rem .95rem;
+  border-radius: var(--pase-radius-sm);
+  letter-spacing: -.005em;
+}
+
+.btn-sm {
+  font-size: .8rem;
+  padding: .25rem .65rem;
+}
+
+.btn-primary {
+  background-color: var(--pase-blue);
+  border-color: var(--pase-blue);
+}
+
+.btn-primary:hover,
+.btn-primary:active {
+  background-color: var(--pase-blue-dark) !important;
+  border-color: var(--pase-blue-dark) !important;
+}
+
+.btn-outline-primary {
+  color: var(--pase-blue);
+  border-color: var(--pase-blue);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--pase-blue);
+  border-color: var(--pase-blue);
+}
+
+.btn-outline-secondary {
+  color: var(--pase-text);
+  border-color: #B7C1CF;
+  background-color: var(--pase-surface);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--pase-navy);
+  border-color: var(--pase-navy);
+  color: #fff;
+}
+
+/* =====================================================================
+   Tarjetas
+   ===================================================================== */
+
+.card {
+  border: 1px solid var(--pase-border);
+  border-radius: var(--pase-radius);
+  box-shadow: var(--pase-shadow-sm);
+}
+
+.card.shadow-sm { box-shadow: var(--pase-shadow-sm) !important; }
+
+.card-body {
+  padding: 1.1rem 1.25rem;
+}
+
+.card-header {
+  background-color: var(--pase-surface);
+  border-bottom: 1px solid var(--pase-border);
+  font-weight: 600;
+  color: var(--pase-navy);
+  padding: .7rem 1.25rem;
+  font-size: .9rem;
+}
+
+.card-header.bg-primary {
+  background-color: var(--pase-blue) !important;
+  border-color: var(--pase-blue);
+}
+
+.card.border-primary {
+  border-color: var(--pase-blue) !important;
+}
+
+/* Tarjetas de indicadores (panel de Inicio) */
+.card-kpi .card-title {
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--pase-text-muted);
+  margin-bottom: .35rem;
+}
+
+.card-kpi .display-6 {
+  color: var(--pase-navy);
+  font-weight: 700;
+  font-size: 2.1rem;
+  margin-bottom: .15rem;
+}
+
+.card-kpi .btn { margin-top: .5rem; margin-right: .35rem; }
+
+/* =====================================================================
+   Tablas
+   ===================================================================== */
+
+.table {
+  background-color: var(--pase-surface);
+  font-size: .875rem;
+  border-radius: var(--pase-radius);
+  overflow: hidden;
+}
+
+.table thead th {
+  background-color: #EEF3FA;
+  color: var(--pase-navy);
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 1px solid var(--pase-border);
+  padding: .6rem .8rem;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: .55rem .8rem;
+  vertical-align: middle;
+  border-color: var(--pase-border);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: var(--pase-bg);
+}
+
+.table-hover > tbody > tr:hover > * {
+  background-color: var(--pase-cyan-tint);
+}
+
+/* =====================================================================
+   Formularios
+   ===================================================================== */
+
+.form-label {
+  font-weight: 600;
+  font-size: .82rem;
+  color: var(--pase-navy);
+  margin-bottom: .3rem;
+}
+
+.form-control,
+.form-select {
+  border-color: var(--pase-border);
+  border-radius: var(--pase-radius-sm);
+  font-size: .875rem;
+  padding: .45rem .75rem;
+  color: var(--pase-text);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--pase-cyan);
+}
+
+.form-control::placeholder {
+  color: #A3ACBA;
+}
+
+/* =====================================================================
+   Insignias de estado (badges)
+   ===================================================================== */
+
+.badge {
+  font-weight: 600;
+  font-size: .74rem;
+  padding: .38em .65em;
+  border-radius: var(--pase-radius-sm);
+  letter-spacing: .01em;
+}
+
+.badge.fs-6 {
+  font-size: .82rem !important;
+  padding: .45em .8em;
+}
+
+/* =====================================================================
+   Alertas
+   ===================================================================== */
+
+.alert {
+  border-radius: var(--pase-radius);
+  border: 1px solid transparent;
+  font-size: .875rem;
+}
+
+.alert-info {
+  background-color: var(--pase-cyan-tint);
+  border-color: #BEEBFA;
+  color: #0A5A78;
+}
+
+.alert-warning {
+  background-color: #FDF6E7;
+  border-color: #F1DFB0;
+  color: #7A5A0B;
+}
+
+.alert-success {
+  background-color: #E8F6EE;
+  border-color: #C4E9D3;
+  color: #1B6B3E;
+}
+
+/* =====================================================================
+   Contenedor principal — compacto
+   ===================================================================== */
+
+.container {
+  max-width: 1180px;
+}
+
+main.pb-3 {
+  padding-bottom: 3rem !important;
+  overflow: visible;
+}
+
+/* Espacio de seguridad bajo el último botón de cualquier formulario, para
+   que nunca quede pegado al pie de página. */
+form > .btn:last-child,
+form > a.btn:last-child {
+  margin-bottom: .25rem;
+}
+
+/* Listas dentro de tarjetas (p. ej. historial de una solicitud) */
+.list-group-item {
+  border-color: var(--pase-border);
+  padding: .65rem 1rem;
+  font-size: .875rem;
+}
+
+/* =====================================================================
+   Impresión — el membrete institucional debe verse bien al imprimir
+   el formulario; se ocultan navegación, pie y elementos no imprimibles.
+   ===================================================================== */
+
+@media print {
+  .pase-navbar,
+  .pase-demo-banner,
+  .pase-footer,
+  form button,
+  a.btn {
+    display: none !important;
+  }
 }

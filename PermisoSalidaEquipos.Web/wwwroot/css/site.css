@@ -159,16 +159,6 @@ hr {
   padding: .45rem 0;
 }
 
-.pase-footer {
-  position: static;
-  clear: both;
-  color: var(--pase-text-muted);
-  font-size: .8rem;
-  border-top: 1px solid var(--pase-border);
-  padding: 1.1rem 0;
-  margin-top: 3.5rem;
-}
-
 /* =====================================================================
    Botones — compactos, con la paleta de marca
    ===================================================================== */
@@ -412,13 +402,12 @@ form > a.btn:last-child {
 
 /* =====================================================================
    Impresión — el membrete institucional debe verse bien al imprimir
-   el formulario; se ocultan navegación, pie y elementos no imprimibles.
+   el formulario; se ocultan navegación, banner y elementos no imprimibles.
    ===================================================================== */
 
 @media print {
   .pase-navbar,
   .pase-demo-banner,
-  .pase-footer,
   form button,
   a.btn {
     display: none !important;
