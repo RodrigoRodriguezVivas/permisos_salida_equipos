@@ -32,9 +32,9 @@ namespace PermisoSalidaEquipos.Web.ViewModels
         public string? MotivoDetalle { get; set; }
 
         [Required(ErrorMessage = "La fecha de salida es obligatoria.")]
-        [Display(Name = "Fecha y hora de salida")]
-        [DataType(DataType.DateTime)]
-        public DateTime FechaSalida { get; set; } = DateTime.Now;
+        [Display(Name = "Fecha de salida")]
+        [DataType(DataType.Date)]
+        public DateTime FechaSalida { get; set; } = DateTime.Now.Date;
 
         [Display(Name = "Fecha estimada de retorno")]
         [DataType(DataType.Date)]

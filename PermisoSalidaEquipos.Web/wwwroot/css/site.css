@@ -160,11 +160,13 @@ hr {
 }
 
 .pase-footer {
+  position: static;
+  clear: both;
   color: var(--pase-text-muted);
   font-size: .8rem;
   border-top: 1px solid var(--pase-border);
   padding: 1.1rem 0;
-  margin-top: 2.5rem;
+  margin-top: 3.5rem;
 }
 
 /* =====================================================================
@@ -207,12 +209,14 @@ hr {
 
 .btn-outline-secondary {
   color: var(--pase-text);
-  border-color: var(--pase-border);
+  border-color: #B7C1CF;
+  background-color: var(--pase-surface);
 }
 
 .btn-outline-secondary:hover {
   background-color: var(--pase-navy);
   border-color: var(--pase-navy);
+  color: #fff;
 }
 
 /* =====================================================================
@@ -388,7 +392,15 @@ hr {
 }
 
 main.pb-3 {
-  padding-bottom: 2rem !important;
+  padding-bottom: 3rem !important;
+  overflow: visible;
+}
+
+/* Espacio de seguridad bajo el último botón de cualquier formulario, para
+   que nunca quede pegado al pie de página. */
+form > .btn:last-child,
+form > a.btn:last-child {
+  margin-bottom: .25rem;
 }
 
 /* Listas dentro de tarjetas (p. ej. historial de una solicitud) */

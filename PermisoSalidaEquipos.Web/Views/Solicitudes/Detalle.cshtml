@@ -37,7 +37,7 @@
             <div class="card-header">Motivo y fechas</div>
             <div class="card-body">
                 <p class="mb-1"><strong>Motivo:</strong> @s.Motivo @(!string.IsNullOrWhiteSpace(s.MotivoDetalle) ? $"- {s.MotivoDetalle}" : "")</p>
-                <p class="mb-1"><strong>Fecha de salida:</strong> @s.FechaSalida.ToString("dd/MM/yyyy HH:mm")</p>
+                <p class="mb-1"><strong>Fecha de salida:</strong> @s.FechaSalida.ToString("dd/MM/yyyy")</p>
                 @if (s.FechaRetornoEstimada.HasValue)
                 {
                     <p class="mb-1"><strong>Retorno estimado:</strong> @s.FechaRetornoEstimada.Value.ToString("dd/MM/yyyy")</p>

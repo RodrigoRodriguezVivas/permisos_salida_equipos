@@ -29,7 +29,7 @@ else
                     <td>@s.Id</td>
                     <td>@s.SolicitanteNombre</td>
                     <td>@s.TipoEquipo - @s.Marca @s.Modelo</td>
-                    <td>@s.FechaSalida.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@s.FechaSalida.ToString("dd/MM/yyyy")</td>
                     <td>@s.FechaCreacion.ToString("dd/MM/yyyy")</td>
                     <td><a asp-controller="Solicitudes" asp-action="Detalle" asp-route-id="@s.Id" class="btn btn-sm btn-primary">Revisar</a></td>
                 </tr>
