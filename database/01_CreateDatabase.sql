@@ -163,15 +163,16 @@ GO
 /* ---------------------------------------------------------------------
    OPCIONAL: primer usuario con rol Director de TI, para poder entrar la
    primera vez y asignar los demás roles desde Administración > Usuarios.
-   Reemplaza 'ALIANZAGRAFICA\usuario.director' por la cuenta de dominio
-   real. También se puede lograr configurando
-   AdministradorInicial:NombreUsuarioDominio en appsettings.json y
-   dejando que la aplicación lo cree en el primer arranque.
+   Reemplaza 'GRUPOGRAF\dir_tecnologia' por la cuenta de dominio real (el
+   dominio real de Aligraf es GRUPOGRAF, no ALIANZAGRAFICA). También se
+   puede lograr configurando AdministradorInicial:NombreUsuarioDominio en
+   appsettings.json y dejando que la aplicación lo cree en el primer
+   arranque (así quedó configurado por defecto en este proyecto).
    --------------------------------------------------------------------- */
--- IF NOT EXISTS (SELECT 1 FROM dbo.PS_Usuarios WHERE NombreUsuarioDominio = 'ALIANZAGRAFICA\usuario.director')
+-- IF NOT EXISTS (SELECT 1 FROM dbo.PS_Usuarios WHERE NombreUsuarioDominio = 'GRUPOGRAF\dir_tecnologia')
 -- BEGIN
 --     INSERT INTO dbo.PS_Usuarios (NombreUsuarioDominio, NombreCompleto, Correo, Cedula, Cargo, RolId, Activo, FechaCreacion)
---     SELECT 'ALIANZAGRAFICA\usuario.director', 'Director de TI', 'director.tecnologia@alianzagrafica.com', '0000000000', 'Director de TI',
+--     SELECT 'GRUPOGRAF\dir_tecnologia', 'Director de TI', 'director.tecnologia@alianzagrafica.com', '0000000000', 'Director de TI',
 --            (SELECT Id FROM dbo.PS_Roles WHERE Nombre = 'DirectorTI'), 1, SYSDATETIME();
 -- END
 -- GO
