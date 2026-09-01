@@ -9,7 +9,7 @@
 
 <div class="row g-3 mt-2">
     <div class="col-md-4">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm card-kpi">
             <div class="card-body">
                 <h5 class="card-title">Mis solicitudes</h5>
                 <p class="card-text display-6">@ViewBag.MisSolicitudesTotal</p>
@@ -23,7 +23,7 @@
     @if (rolActual == RoleNames.JefeInmediato || rolActual == RoleNames.DirectorTI)
     {
         <div class="col-md-4">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm card-kpi">
                 <div class="card-body">
                     <h5 class="card-title">Aprobaciones como jefe inmediato</h5>
                     <p class="card-text display-6">@ViewBag.PendientesComoJefe</p>
@@ -37,7 +37,7 @@
     @if (rolActual == RoleNames.DirectorTI)
     {
         <div class="col-md-4">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm card-kpi">
                 <div class="card-body">
                     <h5 class="card-title">Aprobaciones como Director de TI</h5>
                     <p class="card-text display-6">@ViewBag.PendientesComoDirector</p>
@@ -51,7 +51,7 @@
     @if (rolActual == RoleNames.GuardaSeguridad || rolActual == RoleNames.DirectorTI)
     {
         <div class="col-md-4">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm card-kpi">
                 <div class="card-body">
                     <h5 class="card-title">Salidas por confirmar (portería)</h5>
                     <p class="card-text display-6">@ViewBag.PendientesComoGuarda</p>
@@ -65,7 +65,7 @@
     @if (rolActual == RoleNames.DirectorTI)
     {
         <div class="col-md-4">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm card-kpi">
                 <div class="card-body">
                     <h5 class="card-title">Administración</h5>
                     <p class="text-muted">Roles, jefes inmediatos y reportes de todas las solicitudes.</p>
