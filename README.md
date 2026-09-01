@@ -135,7 +135,7 @@ contraseñas):
     "Usuario": "",
     "Clave": "",
     "CorreoRemitente": "no-responder@alianzagrafica.com",
-    "UrlBaseAplicacion": "http://permisos.alianzagrafica.local"
+    "UrlBaseAplicacion": "http://permisos.alianzagrafica.com"
   },
   "ActiveDirectory": {
     "Dominio": "",

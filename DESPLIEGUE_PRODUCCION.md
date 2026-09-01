@@ -32,7 +32,7 @@ Datos que ya sabemos, confirmados en las pruebas:
   infraestructura — evita usar una cuenta personal o de administrador como
   identidad de la aplicación en producción.
 - El nombre que va a usar la aplicación puertas afuera, ej.
-  `permisos.alianzagrafica.local` (o el que decida infraestructura).
+  `permisos.alianzagrafica.com` (o el que decida infraestructura).
 
 ---
 
@@ -180,7 +180,7 @@ exista y agrega las tablas).
 
 ```
 Import-Module WebAdministration
-New-Website -Name "PermisoSalidaEquipos" -PhysicalPath "C:\inetpub\PermisoSalidaEquipos" -ApplicationPool "PermisoSalidaEquipos" -Port 80 -HostHeader "permisos.alianzagrafica.local"
+New-Website -Name "PermisoSalidaEquipos" -PhysicalPath "C:\inetpub\PermisoSalidaEquipos" -ApplicationPool "PermisoSalidaEquipos" -Port 80 -HostHeader "permisos.alianzagrafica.com"
 ```
 
 Si da error de "el elemento ya existe" (por ejemplo si ya habías hecho una
@@ -189,7 +189,7 @@ del existente:
 
 ```
 Get-WebBinding -Name "PermisoSalidaEquipos" | Remove-WebBinding
-New-WebBinding -Name "PermisoSalidaEquipos" -Protocol http -Port 80 -HostHeader "permisos.alianzagrafica.local"
+New-WebBinding -Name "PermisoSalidaEquipos" -Protocol http -Port 80 -HostHeader "permisos.alianzagrafica.com"
 Set-ItemProperty "IIS:\Sites\PermisoSalidaEquipos" -Name physicalPath -Value "C:\inetpub\PermisoSalidaEquipos"
 Set-ItemProperty "IIS:\Sites\PermisoSalidaEquipos" -Name applicationPool -Value "PermisoSalidaEquipos"
 ```
@@ -227,16 +227,46 @@ Debe mostrar solo `NTLM`.
 ## 9. DNS y firewall — para que TODA la red pueda entrar
 
 Este paso es el que falta para que cualquier persona de Aligraf entre desde su
-propio equipo (no solo tú desde el servidor):
+propio equipo (no solo tú desde el servidor). Se usa `permisos.alianzagrafica.com`
+en vez de un sufijo `.local` — el mismo dominio público de los correos de la
+empresa, pero resuelto de forma privada solo dentro de la red de Aligraf
+("split-horizon DNS"). Esto dos ventajas: es más fácil de recordar/escribir, y
+más adelante se puede usar un certificado HTTPS público real (algo que un
+nombre `.local` nunca puede tener).
 
-**a) Pide al equipo de infraestructura (o hazlo tú si administras el DNS) un
-registro A real** en el DNS interno de Aligraf:
+**a) Averigua primero si ya existe una zona DNS interna para `alianzagrafica.com`.**
+Conectado al servidor DNS interno de Aligraf (normalmente un controlador de
+dominio), PowerShell como administrador:
 
 ```
-Nombre:  permisos.alianzagrafica.local
-Tipo:    A
-Valor:   <IP real del servidor de producción>
+Get-DnsServerZone | Where-Object { $_.ZoneName -like "*alianzagrafica*" }
 ```
+
+- **Si aparece una zona llamada exactamente `alianzagrafica.com`** (ya
+  gestionada internamente, cosa común si el dominio de Active Directory usa
+  ese mismo nombre DNS), simplemente agrega el registro `permisos` dentro de
+  esa zona:
+
+```
+Add-DnsServerResourceRecordA -Name "permisos" -ZoneName "alianzagrafica.com" -IPv4Address "IP_DEL_SERVIDOR_IIS"
+```
+
+- **Si NO existe esa zona**, **no la crees completa** — crear una zona interna
+  para todo `alianzagrafica.com` "taparía" también la resolución de cualquier
+  otro nombre real bajo ese dominio (como el sitio web público o el correo),
+  a menos que también los repliques ahí manualmente. En su lugar, crea una
+  zona interna **solo para el subdominio específico** `permisos.alianzagrafica.com`,
+  que no afecta a nada más:
+
+```
+Add-DnsServerPrimaryZone -Name "permisos.alianzagrafica.com" -ReplicationScope "Domain"
+Add-DnsServerResourceRecordA -Name "@" -ZoneName "permisos.alianzagrafica.com" -IPv4Address "IP_DEL_SERVIDOR_IIS"
+```
+
+Si el DNS lo administra otra persona del equipo de infraestructura, pídeles
+exactamente uno de estos dos registros (según si ya existe o no la zona
+`alianzagrafica.com` internamente) para `permisos.alianzagrafica.com` →
+`<IP real del servidor de producción>`.
 
 **b) Abre el puerto 80 en el firewall de Windows del servidor**, para que
 otros equipos de la red puedan llegar (por defecto IIS no siempre tiene el
@@ -280,7 +310,7 @@ Start-WebAppPool -Name "PermisoSalidaEquipos"
 ```
 
 Desde **otro equipo de la red** (no el servidor), entra a
-`http://permisos.alianzagrafica.local` con `GRUPOGRAF\dir_tecnologia`.
+`http://permisos.alianzagrafica.com` con `GRUPOGRAF\dir_tecnologia`.
 
 Si algo falla, revisa el log más reciente:
 
@@ -303,7 +333,7 @@ notepad C:\inetpub\PermisoSalidaEquipos\web.config
 1. En Administración → Usuarios y roles, usa "Buscar y agregar desde AD" para
    ir agregando a los Jefes Inmediatos, al resto del equipo de TI (con rol
    Director de TI si aplica) y al Guarda de Seguridad, asignándoles su rol.
-2. Comunica a la empresa la URL (`http://permisos.alianzagrafica.local`) para
+2. Comunica a la empresa la URL (`http://permisos.alianzagrafica.com`) para
    que empiecen a usarla.
 3. Si vas a usar el envío de correos (`Smtp:Habilitado`), pide al equipo de
    infraestructura los datos reales del servidor SMTP interno y configúralos
