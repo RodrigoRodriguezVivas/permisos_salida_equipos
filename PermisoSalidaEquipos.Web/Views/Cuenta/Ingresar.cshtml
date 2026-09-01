@@ -32,7 +32,7 @@
                         <div class="card-body">
                             <h5 class="card-title">@usuario.NombreCompleto</h5>
                             <p class="card-text text-muted mb-1">@usuario.Cargo</p>
-                            <span class="badge text-bg-secondary mb-3">@RoleNames.NombreAmigable(usuario.Rol?.Nombre)</span>
+                            <span class="badge bg-secondary mb-3">@RoleNames.NombreAmigable(usuario.Rol?.Nombre)</span>
                             <form asp-controller="Cuenta" asp-action="IngresarComo" method="post">
                                 <input type="hidden" name="usuarioId" value="@usuario.Id" />
                                 <button type="submit" class="btn btn-primary w-100">Entrar como @usuario.NombreCompleto</button>

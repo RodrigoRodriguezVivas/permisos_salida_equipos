@@ -110,14 +110,22 @@ namespace PermisoSalidaEquipos.Web.ViewModels
 
         public static string ClaseBadge(EstadoSolicitud estado) => estado switch
         {
-            EstadoSolicitud.PendienteJefe => "text-bg-warning",
-            EstadoSolicitud.PendienteDirectorTI => "text-bg-warning",
-            EstadoSolicitud.Aprobada => "text-bg-success",
-            EstadoSolicitud.RechazadaJefe => "text-bg-danger",
-            EstadoSolicitud.RechazadaDirectorTI => "text-bg-danger",
-            EstadoSolicitud.CanceladaPorSolicitante => "text-bg-secondary",
-            EstadoSolicitud.SalioDeLaEmpresa => "text-bg-primary",
-            _ => "text-bg-secondary"
+            // Nota: se usa "bg-*" (no "text-bg-*") porque la versión de Bootstrap
+            // incluida en el proyecto (5.1.0) es anterior a Bootstrap 5.3, que es
+            // donde se agregaron las clases "text-bg-*". Con "text-bg-*" el badge
+            // quedaba sin color de fondo y el texto (blanco, de la clase base
+            // ".badge") se volvía invisible sobre el fondo blanco de la página.
+            // "text-dark" además de "bg-warning": el amarillo de "warning" es muy
+            // claro, y el texto blanco por defecto del badge también se leería mal
+            // ahí (poco contraste), así que aquí se fuerza el texto oscuro.
+            EstadoSolicitud.PendienteJefe => "bg-warning text-dark",
+            EstadoSolicitud.PendienteDirectorTI => "bg-warning text-dark",
+            EstadoSolicitud.Aprobada => "bg-success",
+            EstadoSolicitud.RechazadaJefe => "bg-danger",
+            EstadoSolicitud.RechazadaDirectorTI => "bg-danger",
+            EstadoSolicitud.CanceladaPorSolicitante => "bg-secondary",
+            EstadoSolicitud.SalioDeLaEmpresa => "bg-primary",
+            _ => "bg-secondary"
         };
     }
 }

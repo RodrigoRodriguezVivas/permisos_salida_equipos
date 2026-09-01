@@ -5,7 +5,7 @@
 }
 
 <h1 class="mb-3">Hola, @usuario.NombreCompleto</h1>
-<p class="text-muted">Rol: <span class="badge text-bg-secondary">@RoleNames.NombreAmigable(rolActual)</span> @(usuario.Cargo != null ? $"· {usuario.Cargo}" : "")</p>
+<p class="text-muted">Rol: <span class="badge bg-secondary">@RoleNames.NombreAmigable(rolActual)</span> @(usuario.Cargo != null ? $"· {usuario.Cargo}" : "")</p>
 
 <div class="row g-3 mt-2">
     <div class="col-md-4">
